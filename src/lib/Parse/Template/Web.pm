@@ -49,6 +49,48 @@ sub new {
   $self;
 }
 
+# ------------------------------------------------------------------------------
+# defang - Remove characters that would otherwise cause parser evaluation.
+# defang \%hash
+# defang \@array
+# defang \$scalar
+# defang $scalar
+# Also perform lightweight killing of HTML characters: C<\>\<'"&>
+# ------------------------------------------------------------------------------
+#|test(!abort) use Parse::Template::Web;
+#|test(!abort) use Data::Hub;
+#|test(match,abc)
+#|my $p = Parse::Template::Web->new(Data::Hub->new());
+#|$p->defang('a[#b]c');
+#|test(match,abcabc/de)
+#|my $p = Parse::Template::Web->new(Data::Hub->new());
+#|my $r = $p->defang(['a[#b]c', 'a<b>c</d>e']);
+#|join('', @$r);
+# ------------------------------------------------------------------------------
+
+sub defang {
+  my $self = shift;
+  my $input = shift;
+  my $result;
+  if (isa($input, 'ARRAY')) {
+    $result = [];
+    push @$result, $self->defang($_) for @$input;
+  } elsif (isa($input, 'HASH')) {
+    $result = {};
+    %$result = map { $_, $self->defang($$input{$_}) } keys %$input;
+  } else {
+    $result = ref $input ? $$input : $input;
+    my $bs = quotemeta $$self{'bs'};
+    my $es = quotemeta $$self{'es'};
+    while ($result =~ /$bs/) {
+      $result =~ s/$bs//g;
+      $result =~ s/$es//g;
+    }
+    $result =~ s/[><'"&]//g;
+  }
+  return $result;
+}
+
 $Directives{'cgi'}[0] = sub {
   my $self = shift;
   my $name = shift;
@@ -59,9 +101,10 @@ $Directives{'cgi'}[0] = sub {
     next unless defined $addr;
     my $key = $self->get_compiled_value(\$addr);
     next unless defined $key;
-    my $cgi = $self->{Hub}->get("/sys/request/cgi");
-    $result = $cgi->get_valid($key, -opts => $opts);
-    next unless defined $result;
+    my $cgi = $self->{'Hub'}->get("/sys/request/cgi");
+    my $input = $cgi->get_valid($key, -opts => $opts);
+    next unless defined $input;
+    $result = $self->defang($input);
   }
   defined $result ? $result : '';
 };
