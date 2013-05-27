@@ -1,0 +1,10 @@
+#!/usr/bin/perl
+use strict;
+use lib qw(../lib);
+use Data::Hub::Util qw(file_read);
+use Data::Format::Nml qw(nml_parse);
+
+my $fn = shift @ARGV or die "provide a file path";
+my $txt = file_read($fn) or die "$!: fn";
+my $doc = nml_parse($$txt);
+print $doc->to_string;

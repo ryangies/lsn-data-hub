@@ -1,0 +1,69 @@
+#!/usr/bin/perl -w
+use strict;
+use Data::Hub qw($Hub);
+use Data::Hub::Util qw(path_name);
+use Parse::Template::Standard;
+
+sub usage {
+  my $name = path_name($0);
+  print STDOUT <<__EOF;
+usage:
+  $name -h|-help
+  $name path [options]
+path:
+  Path of the template to compile
+options:
+  -debug|-d   Interactive [command-line] debugger
+  -prompt|-p  Prompt for undefined [simple] values
+  -use        Address to data which is placed in the context
+  ...         Other options are placed in the context (used)
+notes:
+* Prompting cannot be used while debugging.
+* Hashes which are placed on to the context stack:
+    1) The -use option (if present)
+    2) The environment (\%ENV)
+    3) The options hash
+* The options hash allows you to define template values on the command line. 
+  For instance:
+    $name template.txt -month 'December' -year '1973'
+  Will result in an options hash of:
+    month => 'December',
+    year => '1973'
+__EOF
+}
+
+our $OPTS = $$Hub{'/sys/OPTS'};
+our $ARGV = $$Hub{'/sys/ARGV'};
+
+sub _take_opt {
+  for (delete @$OPTS{@_}) {
+    return $_ if defined;
+  }
+  undef;
+}
+
+if (_take_opt('h', 'help')) {
+  usage();
+  exit 0;
+}
+
+my $DEBUG = _take_opt('d', 'debug');
+my $PROMPT = _take_opt('p', 'prompt');
+my $filename = shift @$ARGV or die "Please provide a filename\n";
+my $out = '';
+my $addr = $Hub->path_to_addr($filename) or die "Cannot resolve: $filename\n";
+my $p = Parse::Template::Standard->new($Hub, -out => \$out);
+if ($DEBUG) {
+  require Parse::Template::Debug::Debugger;
+  Parse::Template::Debug::Debugger::attach($p);
+} elsif ($PROMPT) {
+  require Parse::Template::Debug::Prompt;
+  Parse::Template::Debug::Prompt::attach($p);
+}
+if (my $use = _take_opt('use')) {
+  $p->use($$Hub{$use});
+}
+$p->use($$Hub{'/sys/ENV'});
+$p->use($$Hub{'/sys/OPTS'});
+$p->compile($addr);
+print $out unless $DEBUG;

@@ -1,0 +1,142 @@
+#!/usr/bin/perl -w
+use strict;
+use IO::Handle;
+use Data::Hub qw($Hub);
+use App::Console::Prompts qw(:all);
+
+our $Cmd_Yum = `which yum` || ''; chomp $Cmd_Yum;
+open FD_STDERR, ">&STDERR" or die "Failed to save STDERR";
+open FD_ERROR, '>', '.STDERR' or die $!;
+
+# ------------------------------------------------------------------------------
+# _mod_to_yum - Default module-name to yum-package-name translation
+# _mod_to_yum $module_name
+# ------------------------------------------------------------------------------
+
+sub _mod_to_yum {
+  my $yum = 'perl-' . $_[0];
+  $yum =~ s/::/-/g;
+  $yum;
+}
+
+# ------------------------------------------------------------------------------
+# dependency_check - Check each dependency, install if requested
+# dependency_check $depends
+# ------------------------------------------------------------------------------
+
+sub dependency_check {
+
+  my $depends = shift;
+  my @yum = ();
+  my @cpan = ();
+
+  printf "%s\n", 'Probing dependencies';
+  printf "%s\n", ('-' x 70);
+
+  STDERR->fdopen(\*FD_ERROR, 'w') or die $!;
+
+  foreach my $info ($depends->values) {
+
+    my $mod = $$info{'mod'} or die;
+    my $ver = $$info{'ver'} || 0;
+    my $yum = $$info{'yum'} || _mod_to_yum($mod);
+
+    printf "%-40s: ", $mod;
+    eval "use $mod" . ($ver ? " $ver" : '') . " ()";
+
+    if ($@) {
+
+      my $p = index $@, '(@INC';
+      $p < 0 and $p = index $@, ' at -e';
+      $p < 0 and $p = 70;
+      my $err = substr $@, 0, $p;
+      print "$err\n";
+
+      if (0 == index($err, 'Can\'t locate')) {
+        if ($Cmd_Yum) {
+          printf "%-40s: ", $yum;
+          my $out = `yum -q info $yum`;
+          if ($out) {
+            print "Found package.\n";
+            push @yum, $yum;
+          } else {
+            print "Package not available.\n";
+            push @cpan, $mod;
+          }
+        } else {
+          # No package manager found, use CPAN
+          push @cpan, $mod;
+        }
+      } elsif (0 == index($err, '--this is only')) {
+        # Package is installed (maybe via yum) so let's install it from CPAN,
+        # where the more-recent version ought exist.
+        push @cpan, $mod;
+      } else {
+        # Unhandled error condition
+        push @cpan, $mod;
+      }
+
+    } else {
+      print "Installed.\n";
+    }
+  }
+
+  STDERR->close;
+  STDERR->fdopen(\*FD_STDERR, 'w');
+
+  printf "%s\n", ('-' x 70);
+
+  if (@yum || @cpan) {
+
+    printf "\n%s\n", 'There are missing dependencies';
+    printf "%s\n", ('-' x 70);
+
+    my $i_yum = undef;
+    my $i_cpan = undef;
+
+    if (@yum) {
+      $i_yum = sprintf("yum install -y %s", $_) for @yum;
+      printf "%s\n", $i_yum;
+    }
+
+    if (@cpan) {
+      $i_cpan = sprintf("perl -MCPAN -e \"install '%s'\"", $_) for @cpan;
+      printf "%s\n", $i_cpan;
+    }
+
+    if (prompt_Yn('Would you like to do this now?')) {
+      `$i_yum` if $i_yum;
+      `$i_cpan` if $i_cpan;
+      printf "%s\n", ('-' x 70);
+      return dependency_check($depends);
+    } else {
+      return 0;
+    }
+
+  }
+
+  return 1;
+
+}
+
+# ------------------------------------------------------------------------------
+# main
+# ------------------------------------------------------------------------------
+
+my $config_path = shift @ARGV or die 'No config file specified';
+my $config = $Hub->get($config_path);
+my $depends = $config->get('depends') or die 'Missing dependency list';
+
+exit dependency_check($depends) ? 0 : 1;
+
+__END__
+
+List of dependencies (required modules)
+
+Each entry takes this form:
+
+  {
+    mod => 'Module::Name',          # The perl module name
+    ver => 0,                       # The required version (optional)
+    yum => 'perl-Module-Name'       # The yum package name (default is shown)
+  },

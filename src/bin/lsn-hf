@@ -1,0 +1,131 @@
+#!/usr/bin/perl -w
+package App::Livesite::HashFile;
+use strict;
+use Perl::Module;
+use Data::Hub qw($Hub);
+use App::Console::Prompts qw(:all);
+use Data::Hub::Courier;
+use HTML::Entities ();
+use Data::Format::Hash qw(:all);
+use Data::Format::JavaScript qw(:all);
+use base 'App::Console::CommandScript';
+
+our %USAGE = ();
+
+# ------------------------------------------------------------------------------
+
+$USAGE{'convert'} = {
+  summary => 'Convert from one file type to another',
+  params => Data::OrderedHash->new(
+    '<source>' => 'Source filename',
+    '<dest>' => 'Dest filename',
+  ),
+};
+
+sub convert {
+  my $self = shift;
+  my $opts = my_opts(\@_);
+  my $source_name = shift or die "No source provided";
+  my $dest_name = shift or die "No dest provided";
+  my $source = $Hub->get($source_name);
+  my $dest = $Hub->get($dest_name);
+  die "Does not exist: $source_name" unless $source;
+  exit 0 if $dest && !prompt_yN(sprintf('Overwrite %s', $dest->get_path));
+  $Hub->set($dest_name, clone($source, -pure_perl))->save();
+};
+
+# ------------------------------------------------------------------------------
+
+$USAGE{'chenc'} = {
+  summary => 'Encode characters as numeric entities',
+  params => Data::OrderedHash->new(
+    '<source>' => 'Source filename',
+  ),
+};
+
+sub chenc {
+  my $self = shift;
+  my $opts = my_opts(\@_);
+  my $source_name = shift or die "No source provided";
+  my $source = $Hub->get($source_name);
+  die "Does not exist: $source_name" unless $source;
+  my $mods = 0;
+  $source->walk(sub {
+    my ($k, $v, $depth, $addr, $struct) = @_;
+    return if ref($v);
+    my $v2 = HTML::Entities::encode_entities_numeric($v, '^\n\x20-\x7e');
+    if ($v2 ne $v) {
+      printf "Update: %s\n", $addr;
+      Data::Hub::Courier::_set_value($struct, $k, $v2);
+      $mods++;
+    }
+  });
+  if ($mods > 0) {
+    printf "Updated %d values.\n", $mods;
+    if (prompt_yN(sprintf('Overwrite %s', $source->get_path))) {
+      $source->save();
+    }
+  }
+};
+
+# ------------------------------------------------------------------------------
+
+$USAGE{'get'} = {
+  summary => 'Get a value',
+  params => Data::OrderedHash->new(
+    '<address>' => 'Address of value',
+    '-n' => 'Do not output the trailing newline',
+    '-f' => 'Output format: hf|json',
+  ),
+};
+
+sub get {
+  my $self = shift;
+  my $opts = my_opts(\@_, {
+    'n' => 0,
+    'f' => 'hf',
+  });
+  my $value_addr = shift or die "No address provided";
+  my $value = $Hub->get($value_addr);
+  if ('hf' eq $$opts{'f'}) {
+    $self->printf("%s", hf_format(\$value));
+  } elsif ('json' eq $$opts{'f'}) {
+    $self->printf("%s", js_format(\$value));
+  } else {
+    $self->fail(sprintf("Unkown output format: %s", $$opts{'f'}));
+  }
+  if (!$$opts{'n'}) {
+    $self->printf("\n");
+  }
+};
+
+# ------------------------------------------------------------------------------
+
+$USAGE{'set'} = {
+  summary => 'Set a value',
+  params => Data::OrderedHash->new(
+    '<address>' => 'Address of value to set',
+    '<value>' => 'Value to be set',
+#   '-f' => 'Input format: hf|json',
+  ),
+};
+
+sub set {
+  my $self = shift;
+  my $opts = my_opts(\@_, {
+#   'f' => 'hf',
+  });
+  my $value_addr = shift or die "No address provided";
+  my $value_value = shift or die "No value provided";
+  my $storage = $Hub->find_storage($value_addr) or die "Not a storable item";
+  my $value = $Hub->set($value_addr, $value_value);
+  $storage->save();
+};
+
+1;
+
+# ==============================================================================
+
+package main;
+use Data::Hub qw($Hub);
+App::Livesite::HashFile->new()->exec(@ARGV);

@@ -1,0 +1,165 @@
+#!/usr/bin/perl -w
+use strict;
+use Parse::StringTokenizer;
+use App::TMS::Client;
+use Data::Hub::Util qw(:all);
+use Cwd qw(cwd);
+
+our $Strtok = Parse::StringTokenizer->new();
+our %Registry = (tms => {}, hub => {});
+our %Commands = ();
+our $Back = undef;
+our $Cwd = cwd();
+our @Use = ();
+
+sub _die {
+  die "(Line $.) ", @_, "\n";
+}
+
+sub _tms {
+  $Registry{tms}{$Cwd} ||= new App::TMS::Client($Cwd);
+}
+
+sub _hub {
+  _tms->{'client'};
+}
+
+# ------------------------------------------------------------------------------
+
+$Commands{'connect'} = sub {
+  _tms->exec('connect', @_);
+};
+
+$Commands{'compile'} = sub {
+  if (@Use) {
+    push @_, '-use=' . join(',', @Use);
+  }
+  _tms->exec('compile', @_);
+};
+
+$Commands{'cd'} = sub {
+  return unless @_;
+  my $dir = $_[0] eq '-' ? $Back : shift;
+  my $back = cwd();
+  chdir $dir or _die "$!: $dir";
+  $Cwd = cwd();
+  $Back = $back;
+  1;
+};
+
+$Commands{'use'} = sub {
+  my $path = shift or return;
+  if ($path eq 'none') {
+    @Use = ();
+  } else {
+    push @Use, $path;
+  }
+  1;
+};
+
+$Commands{'set'} = sub {
+  my $key = shift or return;
+  my $value = shift;
+  _hub->set($key, $value);
+  my $storage = _hub->addr_to_storage($key) or _die "Cannot store: $key";
+  $storage->save();
+  1;
+};
+
+# ------------------------------------------------------------------------------
+
+while (<>) {
+  s/^\s+//;
+  s/\s+$//;
+  /^$/ and next;
+  /^#/ and next;
+  my $cmd = $_;
+  my @tokens = $Strtok->unpack($cmd);
+  my $command = shift @tokens;
+  if (my $handler = $Commands{$command}) {
+    &$handler(@tokens);
+  } else {
+    print `$cmd`;
+  }
+}
+
+__END__
+
+$Commands{'mkdir'} = sub {
+  my $dir = shift or return;
+  dir_create $dir;
+  1;
+};
+
+$Commands{'rmdir'} = sub {
+  my $dir = shift or return;
+  dir_remove $dir;
+  1;
+};
+
+$Commands{'exec'} = sub {
+  return unless @_;
+  system @_;
+  1;
+};
+
+#
+#
+# The inspiration for all this comes from a variety of jotted down notes.
+# Much of it from using the TMS app to manage server configurations. Below
+# are probably the most recent brainstorms and still makes good sense
+# in my head
+#
+#
+
+[livesite]
+
+  /config/services.hf
+    port <= /sys/conf/proxy/port
+    domain <= /sys/conf/proxy/domain
+
+
+  use /config/services.hf
+  config/
+
+
+  {/var/www}            [#dir-vhost-root]
+  {example.com}         [#domain]
+  {/usr/share/livesite} [#dir-livesite-share]
+
+  set domain {example.com}
+  set port {80}
+  set production {1}
+  set enable-gzip {1}
+
+init.tms
+
+  chdir   {/var/www}/{example.com}
+  connect {/usr/share/livesite}/server/site
+
+enable-www.tms
+
+  use ./config/services.hf/global
+  use ./config/services.hf/livesite
+  use file:/etc/livesite/config.hf
+
+  compile /config/apache.conf
+  compile /config/apache.d/www.conf
+  mkdir ./log
+  mkdir ./htdocs
+
+enable-livesite.tms
+
+  use ./config/services.hf/global
+  use ./config/services.hf/livesite
+  use file:/etc/livesite/config.hf
+
+  mkdirs ./config/apache.d/inc
+  compile /config/apache.d/www.conf
+  compile /config/livesite-base.hf
+  compile /config/livesite.hf --orphan
+
+enable-svn.tms
+
+  chdir ./repo
+  exec svnadmin create
