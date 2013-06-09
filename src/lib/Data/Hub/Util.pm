@@ -666,7 +666,7 @@ sub dir_read {
 sub file_read {
   my $path = shift or return;
   my $h = fs_handle($path, 'r') or croak "$!: $path";
-  binmode $h, ':encoding(utf8)';
+  binmode $h, ':encoding(UTF-8)';
   my $contents = '';
   {
     local $/ = undef; # slurp
@@ -723,7 +723,7 @@ sub file_write($@) {
   my $parent = path_parent($path);
   dir_create($parent) if $parent && !-e $parent;
   my $h = fs_handle($path, 'w') or die "$!: $path";
-  binmode $h, ':utf8';
+  binmode $h, ':encoding(UTF-8)';
   for (@_) {
     next unless defined;
     my $s = isa($_, 'SCALAR') ? $_ : \$_;

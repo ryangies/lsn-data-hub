@@ -10,12 +10,7 @@ use base qw(Data::Hub::FileSystem::TextFile);
 use Try::Tiny;
 
 # ------------------------------------------------------------------------------
-#
-# !!! HORRIBLY WRONG UNICODE/UTF8 HANDLING !!!
-#
-# ------------------------------------------------------------------------------
-#
-# All the good intentions are there, it's just backward. It SHOULD be:
+# Encoding
 #
 #   ON DISK       SERIALIZED
 #
@@ -28,15 +23,16 @@ use Try::Tiny;
 #
 # Of course that should be written:
 #
-#   Encode::encode('utf8', $string);
-#   Encode::decode('utf8', $string);
+#   $string = Encode::encode('utf8', $string);
+#   $string = Encode::decode('utf8', $string);
 #
 # Perl strings are made up of `characters` like:
 #
 #   \x{100}
 #
-# Should read this:
-# http://perlgeek.de/en/article/encodings-and-unicode
+# Also:
+#
+#   http://perlgeek.de/en/article/encodings-and-unicode
 #
 # ------------------------------------------------------------------------------
 
@@ -128,7 +124,7 @@ sub __write_to_disk {
   if (-e $tied->__path) {
     # BEGIN CRITICAL SECTION
     my $h = fs_handle($tied->__path, 'rw') or die $!; # LOCK
-    binmode $h, ':utf8' if $tied->__rw_utf8();
+    binmode $h, ':encoding(UTF-8)' if $tied->__rw_utf8();
     my $c = str_ref();
     {
       local $/ = undef; # slurp
@@ -136,14 +132,13 @@ sub __write_to_disk {
     }
     my $data = Data::OrderedHash->new();
     $tied->__parse($c, $data);
-    # 
-    # Possible unicode mismatch between $data and $diff
-    #
+    # XXX: Possible unicode mismatch between $data and $diff
     Data::Compare::merge(curry($data), $diff);
     $c = $tied->__format($data);
 ##  chomp $$c; $$c .= "\n"; # ensure nl at eof
-    # The $h has the ':utf8' layer (meaning encode on write)
-    Encode::decode('utf8', $$c) if $tied->__rw_utf8() && !Encode::is_utf8($$c);
+    # The $h has the UTF-8 layer (meaning encode on write)
+    # There should be no reason to do this
+    # $$c = Encode::decode('UTF-8', $$c) if $tied->__rw_utf8() && !Encode::is_utf8($$c);
     seek $h, 0, 0;
     truncate $h, 0;
     print $h $$c;

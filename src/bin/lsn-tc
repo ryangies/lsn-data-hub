@@ -3,6 +3,7 @@ use strict;
 use Data::Hub qw($Hub);
 use Data::Hub::Util qw(path_name);
 use Parse::Template::Standard;
+binmode STDOUT, ':utf8';
 
 sub usage {
   my $name = path_name($0);
@@ -19,7 +20,7 @@ options:
   ...         Other options are placed in the context (used)
 notes:
 * Prompting cannot be used while debugging.
-* Hashes which are placed on to the context stack:
+* These hashes are placed on to the context stack:
     1) The -use option (if present)
     2) The environment (\%ENV)
     3) The options hash
@@ -66,4 +67,6 @@ if (my $use = _take_opt('use')) {
 $p->use($$Hub{'/sys/ENV'});
 $p->use($$Hub{'/sys/OPTS'});
 $p->compile($addr);
-print $out unless $DEBUG;
+if (!$DEBUG) {
+  print $out;
+}

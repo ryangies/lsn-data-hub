@@ -442,7 +442,7 @@ our %Time_Formats = (
 # strftime '%Y-%m-%d'
 # strftime -localtime
 # strftime -time => 'Sun, 30 Dec 1973 00:00:00 -0400'
-# strftime -time => '1973-12-30' -time-format => '%Y-%m-%d'
+# strftime -time => '1973-12-30' -time_format => '%Y-%m-%d'
 sub strftime {
   my $opts = my_opts(\@_);
   my $format = FMT_RFC822;
@@ -451,7 +451,7 @@ sub strftime {
   }
   my $time;
   if (my $val_time = $$opts{'time'}) {
-    my $fmt_time = $$opts{'time-format'}
+    my $fmt_time = $$opts{'time_format'} || $$opts{'time-format'}
         || $Strptime->compare($val_time, values %Time_Formats);
     if ($fmt_time) {
       $time = Time::Piece->strptime($val_time, $fmt_time);
@@ -483,12 +483,12 @@ sub strftime {
 
 # strptime 'Sun, 30 Dec 1973 00:00:00 -0400'
 # strptime 'Sun, 30 Dec 1973 00:00:00 -0400' -localtime
-# strptime '1973-12-30' -time-format => '%Y-%m-%d'
+# strptime '1973-12-30' -time_format => '%Y-%m-%d'
 sub strptime {
   my $opts = my_opts(\@_);
   my $time = undef;
   my $val_time = shift || 0;
-  my $fmt_time = $$opts{'time-format'}
+  my $fmt_time = $$opts{'time_format'} || $$opts{'time-format'}
       || $Strptime->compare($val_time, values %Time_Formats);
   if ($fmt_time) {
     $time = Time::Piece->strptime($val_time, $fmt_time);

@@ -8,7 +8,7 @@ license => lgpl
 version => @{
   5
   0
-  267
+  269
 }
 scripts => @{
   src/bin/lsn-pm-install

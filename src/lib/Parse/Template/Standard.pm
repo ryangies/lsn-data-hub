@@ -830,6 +830,8 @@ sub _eval_join {
   my $joint = $self->get_value_str(str_ref(shift)) || '';
   my @lines = $self->_get_lines($name, @_);
   $self->get_ctx->{'collapse'} = 0;
+  $joint =~ s/\\{1}r/\r/g;
+  $joint =~ s/\\{1}n/\n/g;
   join($joint, @lines);
 }
 

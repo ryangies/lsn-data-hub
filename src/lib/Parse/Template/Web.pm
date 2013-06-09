@@ -9,6 +9,7 @@ use Data::Hub::Util qw(:all);
 use WWW::Livesite::Args;
 use WWW::Misc::Image qw(image_dims props_to_resize_str);
 use Parse::Template::BBCode;
+use HTML::Entities qw(decode_entities encode_entities);
 #use Text::WikiText;
 #use Text::WikiText::Output::HTML;
 
@@ -291,6 +292,20 @@ $Directives{'nml'}[0] = sub {
   $doc->to_string;
 };
 
+
+# ------------------------------------------------------------------------------
+# _mk_url - Given a relative path or URI, return an escaped URL for use in HTML
+#
+# Spaces and ampersands will be encoded corretly:
+#
+#   http://www.example.com/a b & c/c?a=b&c=1 2&d=%20;e="q"
+#
+# becomes:
+#
+#   http://www.example.com/a%20b%20&amp;%20c/c?a=b&amp;c=1%202&amp;d=%20&amp;e=%22q%22
+#
+# ------------------------------------------------------------------------------
+
 sub _mk_url {
   my $self = shift;
   my $value = shift or return;
@@ -308,7 +323,8 @@ sub _mk_url {
   my ($prefix, $path) = $uri =~ /((?:[a-z\+]+:)?\/\/)?(.*)/;
   my @path = ();
   for (split /\//, $path) {
-    $_ = '' unless defined;
+    $_ = '' unless defined; # retain empty path segments
+    $_ = _uri_unescape($_) if $prefix; # it may already be escaped
     $_ = _uri_escape($_);
     push @path, $_;
   }
@@ -321,7 +337,7 @@ sub _mk_url {
   my $result = $prefix || '';
   $result .= $suffix if $suffix;
   $result .= '/' if $add_slash;
-  $result .= $query if $query;
+  $result .= _query_escape($query) if $query;
   $result;
 }
 
@@ -358,7 +374,7 @@ sub _elem_attrs {
   while (@$args) {
     my ($k, $v) = (shift @$args, shift @$args);
     my $vv = $parser->get_value(\$v);
-    push @attrs, "$k=\"$vv\"";
+    push @attrs, defined $vv ? "$k=\"$vv\"" : $k;
   }
   return @attrs;
 }
@@ -574,19 +590,27 @@ sub _image_info {
 
 sub _uri_unescape {
   my $url = shift;
-# Causing problems with filenames which have a '+' in them, and this MUST be
-# removed. It was here to capture cases where the Live editor set the src of
-# an image with a space in it using the `+` character. This MUST be 
-# transliterated before this point...
-# $url =~ tr/+/ /;
+  decode_entities($url);
   $url =~ s/%([a-fA-F0-9]{2})/pack("C",hex($1))/eg;
   $url;
 }
 
 sub _uri_escape {
   my $str = shift;
-  $str =~ s/([^\${}A-Za-z0-9_\.-])/sprintf("%%%02X", ord($1))/eg;
+  encode_entities($str, '&');
+  $str =~ s/([\s"'])/sprintf("%%%02X", ord($1))/eg;
   $str;
+}
+
+sub _query_escape {
+  my $query = shift;
+  my @parts = split /[&;]/, decode_entities($query);
+  my @result = ();
+  for (@parts) {
+    s/([\s"'])/sprintf("%%%02X", ord($1))/eg;
+    push @result, $_;
+  }
+  join '&amp;', @result;
 }
 
 1;

@@ -357,6 +357,7 @@ sub keys {
   }
 }
 
+# TODO - The items should be curried.
 sub values {
   my ($struct, $idx) = @_;
   if (defined $idx) {

@@ -139,6 +139,7 @@ $Static_Directives{'url'}[0] = sub {
   my $name = shift;
   my $opts = my_opts(\@_);
   my $addr = shift;
+  $parser->get_ctx->{collapse} = 0;
   if ($opts->{resize}) {
     my $addr_str = $parser->get_value_str(\$addr) or return;
     my $resize_str = $parser->get_value_str($opts->{resize}) or
