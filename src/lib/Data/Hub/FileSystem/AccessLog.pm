@@ -1,6 +1,6 @@
 package Data::Hub::FileSystem::AccessLog;
 use strict;
-our $VERSION = 0;
+our $VERSION = 0.2;
 
 use Perl::Class;
 use Perl::Module;
@@ -28,7 +28,7 @@ sub set_value {
   my $mtime = shift;
   return unless defined $mtime;
   $self->{$path} = $mtime;
-  for (@{$self->__->{listeners}}) {
+  for (@{$self->__->{'listeners'}}) {
     $_->{$path} = $mtime;
   }
   $mtime;
@@ -37,7 +37,8 @@ sub set_value {
 sub clear {
   my $self = shift;
   %$self = ();
-  for (@{$self->__->{listeners}}) {
+  for (@{$self->__->{'listeners'}}) {
+    confess "Undefined listener" unless defined $_;
     %{$_} = ();
   }
 }
@@ -46,7 +47,7 @@ sub add_listener {
   my $self = shift;
   for (@_) {
     throw Error::IllegalArg unless isa($_, 'HASH');
-    push @{$self->__->{listeners}}, $_;
+    push @{$self->__->{'listeners'}}, $_;
   }
 }
 
@@ -54,12 +55,12 @@ sub remove_listener {
   my $self = shift;
   foreach my $listener (@_) {
     my $i = 0;
-    for (@{$self->__->{listeners}}) {
+    for (@{$self->__->{'listeners'}}) {
       if ($_ ne $listener) {
         $i++;
         next;
       }
-      splice @{$self->__->{listeners}}, $i, 1;
+      splice @{$self->__->{'listeners'}}, $i, 1;
       last;
     }
   }

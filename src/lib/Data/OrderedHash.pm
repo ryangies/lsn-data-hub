@@ -3,7 +3,7 @@ use strict;
 use Tie::Hash;
 use Perl::Module;
 use base qw(Tie::ExtraHash);
-our $VERSION = '#{/rundata/ver/lib}#';
+our $VERSION = 0.3;
 
 sub DATA()    {0} # Underlying hash
 sub ORDER()   {1} # Map of key to its position

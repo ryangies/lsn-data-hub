@@ -1,5 +1,6 @@
 package Perl::Class;
 use strict;
+our $VERSION = 0.1;
 our %NAMESPACE = ();
 sub new {
   my $class = ref($_[0]) ? ref(shift) : shift;
@@ -23,6 +24,7 @@ sub DESTROY {
 
 package Perl::Class::Hash;
 use base qw(Perl::Class);
+our $VERSION = 0.1;
 sub new {
   my $class = ref($_[0]) ? ref(shift) : shift;
   my $self = bless {}, $class;
@@ -33,6 +35,7 @@ sub new {
 package Perl::Class::OrderedHash;
 use Data::OrderedHash;
 use base qw(Perl::Class);
+our $VERSION = 0.1;
 sub new {
   my $class = ref($_[0]) ? ref(shift) : shift;
   my $self = bless Data::OrderedHash->new, $class;
@@ -42,6 +45,7 @@ sub new {
 
 package Perl::Class::Array;
 use base qw(Perl::Class);
+our $VERSION = 0.1;
 sub new {
   my $class = ref($_[0]) ? ref(shift) : shift;
   my $self = bless [], $class;
@@ -51,6 +55,7 @@ sub new {
 
 package Perl::Class::Scalar;
 use base qw(Perl::Class);
+our $VERSION = 0.1;
 sub new {
   my $class = ref($_[0]) ? ref(shift) : shift;
   my $null = undef;

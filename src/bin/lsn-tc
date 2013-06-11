@@ -7,18 +7,21 @@ binmode STDOUT, ':utf8';
 
 sub usage {
   my $name = path_name($0);
-  print STDOUT <<__EOF;
+  print STDOUT <<__end;
 usage:
   $name -h|-help
   $name path [options]
 path:
   Path of the template to compile
 options:
-  -debug|-d   Interactive [command-line] debugger
-  -prompt|-p  Prompt for undefined [simple] values
+  -d|-debug   Interactive command-line debugger
+  -p|-prompt  Prompt for undefined scalar values
+  -b|-begin   Begin sequence, default: [#
+  -e|-end     End sequence, default: ]
   -use        Address to data which is placed in the context
   ...         Other options are placed in the context (used)
 notes:
+* The address specified by -use must be beneath the cwd
 * Prompting cannot be used while debugging.
 * These hashes are placed on to the context stack:
     1) The -use option (if present)
@@ -30,7 +33,7 @@ notes:
   Will result in an options hash of:
     month => 'December',
     year => '1973'
-__EOF
+__end
 }
 
 our $OPTS = $$Hub{'/sys/OPTS'};
@@ -50,10 +53,16 @@ if (_take_opt('h', 'help')) {
 
 my $DEBUG = _take_opt('d', 'debug');
 my $PROMPT = _take_opt('p', 'prompt');
+my $BEG = _take_opt('b', 'begin');
+my $END = _take_opt('e', 'end');
 my $filename = shift @$ARGV or die "Please provide a filename\n";
-my $out = '';
 my $addr = $Hub->path_to_addr($filename) or die "Cannot resolve: $filename\n";
-my $p = Parse::Template::Standard->new($Hub, -out => \$out);
+my $parser_opts = {};
+$BEG and $$parser_opts{'begin'} = $BEG;
+$END and $$parser_opts{'end'} = $END;
+my $out = '';
+$$parser_opts{'out'} = \$out;
+my $p = Parse::Template::Standard->new($Hub, -opts => $parser_opts);
 if ($DEBUG) {
   require Parse::Template::Debug::Debugger;
   Parse::Template::Debug::Debugger::attach($p);

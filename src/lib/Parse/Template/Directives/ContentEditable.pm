@@ -39,7 +39,6 @@ sub _innerHTML {
 
 # ------------------------------------------------------------------------------
 # _create_element - Create content editable elements
-# [#:ce:p mytext] == <p>[#:ce mytext]</p>
 # ------------------------------------------------------------------------------
 
 sub _create_element {

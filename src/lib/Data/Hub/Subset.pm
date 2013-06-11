@@ -9,6 +9,8 @@ use Data::Hub::Query;
 use Data::Hub::ExpandedSubset;
 push our @ISA, qw(Data::Hub::Container);
 
+our $VERSION = 0.1;
+
 sub new {
   my $items = Data::OrderedHash->new();
   isa($_[1], __PACKAGE__) and return $_[1];

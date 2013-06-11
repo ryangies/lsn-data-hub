@@ -75,6 +75,7 @@ our @EXPORT_OK = qw(
   dir_is_system
   dir_move
   dir_remove
+  dir_remove_contents
 );
 our %EXPORT_TAGS = (
   all => [@EXPORT_OK],
@@ -890,7 +891,25 @@ sub dir_copy_contents($$) {
       dir_create($to);
       &dir_copy_contents($from, $to);
     } else {
-      file_copy($from, $to);
+      file_copy($from, $to) or throw Error::Simple "$!: $from -> $to";
+    }
+  }
+}
+
+# ------------------------------------------------------------------------------
+# dir_remove_contents - Remove a directories contents
+# dir_remove_contents $path
+# ------------------------------------------------------------------------------
+
+sub dir_remove_contents($) {
+  my ($dir) = @_;
+  for (dir_read($dir)) {
+    next if dir_is_system($_, $dir);
+    my $item = $dir . '/' . $_;
+    if (-d $item) {
+      dir_remove($item);
+    } else {
+      file_remove($item);
     }
   }
 }

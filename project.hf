@@ -4,11 +4,11 @@ builder => perl
 src_dir => src/lib
 src_files => ALL
 abstract => Data Hub Core Bundle
-license => lgpl
+license => mit
 version => @{
   5
   0
-  269
+  270
 }
 scripts => @{
   src/bin/lsn-pm-install
@@ -21,27 +21,56 @@ scripts => @{
   src/bin/lsn-tms-script
 }
 depends => %{
+  Carp
+  Compress::Zlib
+  Cwd
+  Data::Dumper
+  DateTime
+  DateTime::TimeZone
+  Digest::SHA1
+  Encode
+  Error
+  Error::Simple
+  Exporter
+  Fcntl
+  File::Copy
+  File::Spec
+  HTML::Entities
+  IO::Dir
+  IO::File
+  Image::ExifTool
+  JSON::XS
+  List::Util
+  MIME::Base64
+  Math::Symbolic
+  Perl::StringToken
+  Scalar::Util
+  Term::ANSIColor
+  Term::ReadLine
+  Term::Size
+  Tie::Hash
+  Tie::Scalar
+  Time::HiRes
+  Time::Piece
+  Try::Tiny
+  WWW::Livesite::Args
+  WWW::Misc::Image
+  YAML::XS
 }
 about => %{
   copyright.txt => ${
     Copyright (C) 2006-2013 by Livesite Networks, LLC. All rights reserved.
-
     Copyright (C) 2000-2005 by Ryan Gies. All rights reserved.
-
     Redistribution and use in source and binary forms, with or without 
     modification, are permitted provided that the following conditions are met:
-
     * Redistributions of source code must retain the above copyright notice, 
     this list of conditions and the following disclaimer.
-
     * The origin of this software must not be misrepresented; you must not 
     claim that you wrote the original software. If you use this software in a 
     product, an acknowledgment in the product documentation would be 
     appreciated but is not required.
-
     * Altered source versions must be plainly marked as such, and must not be 
     misrepresented as being the original software.
-
     * The name of the author may not be used to endorse or promote products 
     derived from this software without specific prior written permission.
   }
@@ -59,7 +88,6 @@ about => %{
     CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
     IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY 
     OF SUCH DAMAGE.
-
     To the best of our knowledge, no patented algorithms have been used. However, we
     do not have the resources to carry out a patent search, and therefore cannot 
     give any guarantee of the above statement.

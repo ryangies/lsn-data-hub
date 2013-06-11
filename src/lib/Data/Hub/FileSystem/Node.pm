@@ -11,6 +11,8 @@ use Data::Hub::FileSystem::AccessLog;
 use Fcntl qw(S_ISREG S_ISDIR S_ISBLK S_ISCHR S_IFMT);
 push our @ISA, qw(Tie::ExtraHash Data::Hub::Container);
 
+our $VERSION = 0.1;
+
 # Implementing classes (FileSystem handlers)
 our @Handlers = ();
 

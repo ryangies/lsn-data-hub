@@ -51,6 +51,17 @@ sub c_printf ($@) {
 
 __END__
 
+=pod:status
+
+  standalone => yes
+
+  audience => scripts
+
+  complience => ${
+    Does not comply with standards. This module is in the C<App> namespace, however
+    is not a ready-to-run app. Rather it is a helper for ready-to-run console apps.
+  }
+
 =pod:synopsis
 
   use App::Console::Color qw(:all);

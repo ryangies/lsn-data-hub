@@ -9,8 +9,12 @@ use Data::OrderedHash;
 use base qw(Data::Hub::FileSystem::TextFile);
 use Try::Tiny;
 
+our $VERSION = 0.1;
+
 # ------------------------------------------------------------------------------
-# Encoding
+# Encoding. This are just my notes. The Data::Hub::Util class, which is the
+# singular point for file reading and writing, does so strictly in UTF-8. Since
+# we do our own reading and writing, I made note of the basics of encoding here.
 #
 #   ON DISK       SERIALIZED
 #
@@ -29,10 +33,6 @@ use Try::Tiny;
 # Perl strings are made up of `characters` like:
 #
 #   \x{100}
-#
-# Also:
-#
-#   http://perlgeek.de/en/article/encodings-and-unicode
 #
 # ------------------------------------------------------------------------------
 

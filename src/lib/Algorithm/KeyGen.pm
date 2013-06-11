@@ -37,11 +37,11 @@ our $KeyGen = __PACKAGE__->new();
 #                         would like to use double-wide sequences such as 
 #                         ['aa', 'bb', 'cc'].  The default is 1.
 #
-# N<1> Relationships between source digits and key length.
+# Relationships between source digits and key length.
 #
 #   T = Total key length (C<$key_length>)
 #   n = Number of random source digits
-#
+#   
 #      T = n + n/2
 #     2T = 3n
 #   2T/3 = n
@@ -96,10 +96,19 @@ sub _ord {
   $idx;
 }
 
+# ------------------------------------------------------------------------------
+# rand - The random-character generation function
+# ------------------------------------------------------------------------------
+
 sub rand {
   my $self = shift;
   $self->_chr(int(CORE::rand($self->{charset_length})));
 }
+
+# ------------------------------------------------------------------------------
+# create - Generate a new key
+# create
+# ------------------------------------------------------------------------------
 
 sub create {
   my $self = shift;
@@ -121,6 +130,13 @@ sub create {
   $o;
 }
 
+# ------------------------------------------------------------------------------
+# validate - Validate a key
+# validate $key
+#
+# Returns the key if it is valid, otherwise undef.
+# ------------------------------------------------------------------------------
+
 sub validate {
   my $self = shift;
   my $cw = $$self{char_width};
@@ -134,6 +150,11 @@ sub validate {
   }
   $_[0];
 }
+
+# ------------------------------------------------------------------------------
+# hash - The hashing function
+# hash $left, $right
+# ------------------------------------------------------------------------------
 
 sub hash {
   my $self = shift;

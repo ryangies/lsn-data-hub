@@ -12,6 +12,8 @@ use Data::Hub::FileSystem::File;
 
 use base qw(Perl::Class::Hash Data::Hub::Container);
 
+our $VERSION = 1.3;
+
 our $TESTS = 'true|false|defined|abort|match|regex';
 our $PODHANDLERS = 'summary|synopsis|description|seealso|sub';
 our $BASEPACKAGES = 'strict|warnings|UNIVERSAL|base';
@@ -22,6 +24,18 @@ sub new {
   $self->{tests} = [];
   $self->{docs} = [];
   $self;
+}
+
+sub _append_line (\$$) {
+  my $base_text = shift;
+  my $text = shift;
+  # If this line is indented, and an empty newline preceded this line,
+  # then give that empty newline a two-space indentation so that these
+  # CODE blocks (in the rendered pod2html HTML) are contiguous.
+  if ($text =~ /^ {2,}/ && $$base_text =~ s/^( +[^\n]+)\n\Z\n/$1\n  \n/m) {
+    $$base_text =~ s/\n\z/  \n/s;
+  }
+  $$base_text .= $text . "\n";
 }
 
 sub parse {
@@ -85,7 +99,7 @@ sub parse {
       next;
     };
 
-    # Begin new package
+    # Module dependencies
     m/^use\s+([^\s;]+)/ and do {
       my $dep = $1;
       unless ($dep =~ /^($BASEPACKAGES)$/) {
@@ -111,7 +125,7 @@ sub parse {
     # Process POD comments
     if( $slurp ) {
       if ($into eq 'sub') {
-        $$method{'description'} .= "$_\n";
+        _append_line($$method{'description'}, $_);
       } elsif ($into =~ /test|result/) {
         s/^=result ?(.*)$/$1/ and do {
           chomp;
@@ -121,14 +135,13 @@ sub parse {
             $into = '';
           }
         };
-#       s/^[\s'"]*(.*)[\s'"]*$/$1/ if ($into eq 'result');
         s/^\s{2}// if ($into eq 'result');
         if ($into && $_) {
           $$t{$into} and $$t{$into} .= "\n";
           $$t{$into} .= $_;
         }
       } else {
-        $$pkg{$into} .= "$_\n";
+        _append_line($$pkg{$into}, $_);
       }
       next;
     }
@@ -198,10 +211,10 @@ sub parse {
           next;
         }
         if (/^$$method{'name'}/) {
-          $$method{'usage'} .= $_ ? "  $_\n" : "\n";
         } else {
           /\w+:$/ and $_ .= "\n"; # don't join next line - eg, 'where:'
-          $$method{'description'} .= "$_\n";
+#         $$method{'description'} .= "$_\n";
+          _append_line($$method{'description'}, $_);
         }
       } else {
         $method = _mkmethod($pkg, $_);
@@ -233,3 +246,76 @@ sub _mkmethod {
 }
 
 1;
+
+__END__
+
+=pod:summary
+
+  Extract documentation and test cases from a properly annotated file
+
+=pod:synopsis
+
+  use Perl::ModuleInfo;
+  my $info = Perl::ModuleInfo->new();
+  $info->parse('./lib', 'Local/Example.pm');
+  $info->parse('./lib', 'Local/Sample.pm');
+
+=pod:description
+
+Extract documentation and test cases from a properly annotated file.
+
+Shortcut POD annotations:
+
+These C<=pod> annotations must begin the line with no leading white space.
+
+  =pod:summary        The part which comes after the package NAME
+  =pod:synopsis       The SYNOPSIS section
+  =pod:description    The DESCRIPTION section
+  =pod:seealso        The SEE ALSO section
+  =pod:sub            Documentation for a subroutine
+
+Example:
+
+  package Local::Example;
+
+  # say_hello - Print a greeting
+  # The normal way to document a method
+  sub say_hello {
+    printf "%s\n", 'Hello';
+  }
+
+  sub say_goodbye {
+    printf "%s\n", 'Goodbye';
+  }
+
+  1;
+
+  =pod:summary
+
+    An example module
+
+  =pod:synopsis
+
+    use Local::Example;
+
+  =pod:description
+
+  This example module does nothing of interest.
+
+  =pod:seealso
+
+  The L<Perl::ModuleInfo> module
+
+  =pod:sub say_goodbye - Print a parting
+
+  Another way to write the documentation for a method.
+
+  =cut
+
+Test cases:
+
+For test written with POD annotations C<=test> and C<=result>, the C<=result>
+body must begin with two and only two spaces. Any additional leading spaces
+are considered part of the actual test result.
+
+=cut
