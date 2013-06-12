@@ -500,8 +500,10 @@ sub _mk_image {
     $opts->{$k} = $parser->get_value_str(\$v);
   }
 
+  my %lsn_opts = ();
+
   # content-editable may not resize images with a static resize option
-  my $user_can_resize = $$opts{'resize'} ? 0 : 1;
+  $lsn_opts{'resize'} = 'no-resize' if $$opts{'resize'};
 
   $parser->_addr_localize(\$src);
   my @dims = ();
@@ -527,6 +529,7 @@ sub _mk_image {
       push @img_attrs, sprintf('style="%s"', join(';', @styles));
       my ($w, $h) = ($$zoom{'width'}, $$zoom{'height'});
       @dims = ("width=\"$w\"", "height=\"$h\"");
+      $lsn_opts{'zoom'} = 'zoom';
     }
   }
 
@@ -540,7 +543,11 @@ sub _mk_image {
   my $img_str = join ' ', @dims, "src=\"$img_src\"", @img_attrs;
   if ($$opts{editable}) {
     $img_str .= " _lsn_ds=\"$img_ds\"";
-    $img_str .= " _lsn_opts=\"resize='no-resize';\"" unless $user_can_resize;
+    if (%lsn_opts) {
+      $img_str .= ' _lsn_opts="';
+      $img_str .= sprintf("%s='%s';", $_, $lsn_opts{$_}) for keys %lsn_opts;
+      $img_str .= '"';
+    }
   }
 
   return @a_attrs ? "<a $a_str><img $img_str/></a>" : "<img $img_str/>";
