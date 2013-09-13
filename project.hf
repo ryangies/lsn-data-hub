@@ -8,7 +8,7 @@ license => mit
 version => @{
   5
   0
-  270
+  271
 }
 scripts => @{
   src/bin/lsn-pm-install
@@ -21,41 +21,6 @@ scripts => @{
   src/bin/lsn-tms-script
 }
 depends => %{
-  Carp
-  Compress::Zlib
-  Cwd
-  Data::Dumper
-  DateTime
-  DateTime::TimeZone
-  Digest::SHA1
-  Encode
-  Error
-  Error::Simple
-  Exporter
-  Fcntl
-  File::Copy
-  File::Spec
-  HTML::Entities
-  IO::Dir
-  IO::File
-  Image::ExifTool
-  JSON::XS
-  List::Util
-  MIME::Base64
-  Math::Symbolic
-  Perl::StringToken
-  Scalar::Util
-  Term::ANSIColor
-  Term::ReadLine
-  Term::Size
-  Tie::Hash
-  Tie::Scalar
-  Time::HiRes
-  Time::Piece
-  Try::Tiny
-  WWW::Livesite::Args
-  WWW::Misc::Image
-  YAML::XS
 }
 about => %{
   copyright.txt => ${

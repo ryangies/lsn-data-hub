@@ -181,6 +181,8 @@ sub typeof {
         if (isa($struct, FS('TextFile'))) {
           $type .= $struct->length ? '-multipart' : '-text';
         } else {
+          # So to differentiate from `file-multipart` which indicates text
+          $type .= '-binary';
           $type .= '-multipart' if $struct->length;
         }
         $ext and $type .= "-$ext";

@@ -176,6 +176,58 @@ sub fs_change_log {
   tied(%$self)->__fs_change;
 }
 
+# ------------------------------------------------------------------------------
+# uri - Return a URI to the specified resource
+#
+# uri $address
+# uri $address, -proto => 'https'
+#
+# Where:
+#
+#   $address may be an absolute address under the Hub root
+#
+#     '/path/to/resource'
+#
+#   or a relative path:
+#
+#     './resource'
+#     '../path/to/resource'
+#
+# A web server MUST populate C</sys/server/uri> with the server origin. For
+# example:
+#
+#   //example.com
+#   //example.com:90
+# 
+# and MAY populate C</sys/request/scheme> with either:
+#
+#   http
+#   https
+#
+# The C<-proto> option takes precedence to C</sys/request/scheme> and the
+# default scheme of C<http>.
+#
+# If C</sys/server/uri> is not populated, then the full C<file://> URI is
+# produced.
+# ------------------------------------------------------------------------------
+
+sub uri {
+  my $self = shift;
+  throw Error::NotStatic unless isa($self, __PACKAGE__);
+  my $result = '';
+  my $addr = tied(%$self)->__resolve_addr(shift) or return;
+  my $opts = my_opts(\@_);
+  my $server_uri = $self->get('/sys/server/uri');
+  if ($server_uri) {
+    my $proto = $$opts{'proto'} || $self->get('/sys/request/scheme') || 'http';
+    $result = sprintf '%s:%s%s', $proto, $server_uri, $addr;
+  } else {
+    my $path = $self->addr_to_path($addr);
+    $result = sprintf 'file://%s', $path;
+  }
+  $result;
+}
+
 sub path_to_addr {
   my $self = shift;
   throw Error::NotStatic unless isa($self, __PACKAGE__);
@@ -350,11 +402,7 @@ sub STORE {
 
 sub FETCH {
   my $tied = shift;
-  my $addr = shift;
-  if ($addr =~ /^\./) {
-    my $cwd = $tied->__dir_stack->[0];
-    $addr = addr_normalize("$cwd/$addr");
-  }
+  my $addr = $tied->__resolve_addr(shift);
   my $value = $tied->__cache->{$addr};
   return $value if defined $value;
   my $p_addr = $addr;
@@ -370,6 +418,16 @@ sub FETCH {
     $value = $tied->__fetch($addr);
   }
   $value;
+}
+
+sub __resolve_addr {
+  my $tied = shift;
+  my $addr = shift;
+  if ($addr =~ /^\./) {
+    my $cwd = $tied->__dir_stack->[0];
+    $addr = addr_normalize("$cwd/$addr");
+  }
+  $addr;
 }
 
 sub __fetch {
