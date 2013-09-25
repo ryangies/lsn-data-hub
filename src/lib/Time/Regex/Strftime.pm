@@ -94,10 +94,10 @@ sub init {
   $self->{csc_to_re}{F} = $self->compile('%Y-%m-%d');
   $self->{csc_to_re}{R} = $self->compile('%H:%M');
   $self->{csc_to_re}{T} = $self->compile('%H:%M:%S');
-  $self->{csc_to_re}{c} = $self->compile($self->{d_t_fmt});
-  $self->{csc_to_re}{D} = $self->compile($self->{d_us_fmt});
   $self->{csc_to_re}{x} = $self->compile($self->{d_fmt});
   $self->{csc_to_re}{X} = $self->compile($self->{t_fmt});
+  $self->{csc_to_re}{c} = $self->compile($self->{d_t_fmt});
+  $self->{csc_to_re}{D} = $self->compile($self->{d_us_fmt});
   $self->{csc_to_re}{'+'} = $self->compile($self->{lc_time});
   $self;
 }
@@ -109,11 +109,18 @@ sub _csc_expr {
   "[$chars]";
 }
 
+sub _csc_to_re {
+  my $self = shift;
+  my $csc = shift or die "No csc provided";
+  my $re = $$self{csc_to_re}{$csc} or die "No re for: $csc";
+  $re;
+}
+
 sub compile {
   my $self = shift;
   my $format = shift;
   my $re = $format;
-  $re =~ s/(?<![^\%]\%)\%($$self{csc_expr})/$$self{csc_to_re}{$1}/g;
+  $re =~ s/(?<![^\%]\%)\%($$self{csc_expr})/$self->_csc_to_re($1)/eg;
   $re;
 }
 
