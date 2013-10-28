@@ -8,7 +8,7 @@ use Data::Hub::Util qw(:all);
 use Math::Symbolic;
 use Error::Logical;
 use Algorithm::KeyGen qw($KeyGen);
-use Data::Format::JavaScript qw(js_format);
+use Data::Format::JavaScript qw(js_format js_format_string);
 use Parse::Template::Content;
 use Parse::Template::ForLoop;
 use Parse::Template::Directives::FileInfo;
@@ -109,7 +109,7 @@ $Directives{'json'}{'string'}[0] = sub {
   my $addr = shift;
   my $text = $self->get_compiled_value(\$addr);
   $self->get_ctx->{'collapse'} = 0;
-  js_format($text);
+  js_format_string($text);
 };
 
 sub _get_data_value {
