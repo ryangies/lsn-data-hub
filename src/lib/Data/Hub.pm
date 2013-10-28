@@ -33,9 +33,13 @@ our $Hub = undef;
 sub import {
   my $caller = scalar(caller) || '';
   my $arg1 = $_[1] || '';
-  if ($arg1 eq '$Hub' && !defined $Hub && $caller eq 'main') {
-    $Hub = __PACKAGE__->new();
-    $Hub->parse_env;
+  if ($arg1 eq '$Hub' && $caller eq 'main') {
+    if (defined $Hub) {
+      die sprintf("Unexpected initialization! %s::\$Hub", __PACKAGE__);
+    } else {
+      $Hub = __PACKAGE__->new();
+      $Hub->parse_env;
+    }
   }
   goto &Exporter::import;
 }
