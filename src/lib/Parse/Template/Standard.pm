@@ -98,10 +98,11 @@ $Directives{'addr'}{'join'}[0] = sub {
 $Directives{'json'} = {};
 $Directives{'json'}{'*'}[0] =
 $Directives{'json'}{'var'}[0] = sub {
-  my $self = $_[0];
-  my $value = _get_data_value(@_);
+  my $self = shift;
+  my $opts = my_opts(\@_);
+  my $value = $self->_get_data_value(@_, -opts => $opts);
   $self->get_ctx->{'collapse'} = 0;
-  js_format($value);
+  js_format($value, -opts => $opts);
 };
 $Directives{'json'}{'string'}[0] = sub {
   my $self = shift;
