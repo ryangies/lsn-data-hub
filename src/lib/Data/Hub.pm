@@ -44,6 +44,15 @@ sub import {
   goto &Exporter::import;
 }
 
+# ------------------------------------------------------------------------------
+# Relocate - Relocate the shared $Hub to a new physical path
+# ------------------------------------------------------------------------------
+
+sub Relocate {
+  die 'Shared object $Hub is not defined.' unless defined $Hub;
+  $Hub = __PACKAGE__->new(@_);
+}
+
 # OO interface
 
 sub new {
