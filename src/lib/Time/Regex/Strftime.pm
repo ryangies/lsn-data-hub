@@ -52,6 +52,7 @@ sub init {
     d => $$self{num}{'01_31'},
     D => undef,
     e => $$self{num}{'1_31'},
+    f => $$self{num}{'000_99999'}, # fractions of a second (time hires) (not standard)
     F => undef,
     G => $$self{num}{'0000_9999'},
     g => $$self{num}{'00_99'},
