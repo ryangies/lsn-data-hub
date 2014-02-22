@@ -980,6 +980,7 @@ our %Time_Formats = (
   gmt       => FMT_GMT,
   rfc822    => FMT_RFC822,
   rfc3339   => FMT_RFC3339,
+  hires     => FMT_HIRES,
 
 );
 
@@ -995,7 +996,8 @@ sub _eval_strftime {
   my $opts = $self->get_opts(\@_);
   my $format = FMT_RFC822;
   if (@_) {
-    my $spec = $self->get_value_str(str_ref(shift));
+    my $arg = shift;
+    my $spec = $self->get_value_str(ref $arg ? $arg : \$arg);
     $spec and $format = $Time_Formats{$spec} || $spec;
   }
   my $time;
