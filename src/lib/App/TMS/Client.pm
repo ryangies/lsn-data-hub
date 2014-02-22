@@ -34,8 +34,10 @@ sub new {
   my $repo_dir = $client->{"$TMS_SETTINGS/repo_dir"};
   my $repo = undef;
   try {
-    my $abs = path_is_absolute($repo_dir) ? $repo_dir : path_join(cwd(), $repo_dir);
-    $repo = $repo_dir ? Data::Hub->new($abs) : undef;
+    if ($repo_dir) {
+      my $abs = path_is_absolute($repo_dir) ? $repo_dir : path_join(cwd(), $repo_dir);
+      $repo = Data::Hub->new($abs);
+    }
   } catch Error::Simple with {
     warnf "Current repository is invalid ($@): %s\n", $repo_dir;
   };
