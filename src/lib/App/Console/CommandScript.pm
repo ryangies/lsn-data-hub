@@ -161,6 +161,22 @@ sub fail {
   exit 1;
 }
 
+# ------------------------------------------------------------------------------
+# quit - Exit the program (not trappable) with an optional message
+# quit
+# quit @messages
+# The C<@messages> are not written to STDERR if C<-quiet> is enabled.
+# ------------------------------------------------------------------------------
+
+sub quit {
+  my $self = shift;
+  if (@_ && !$self->{'OPTS'}{'quiet'}) {
+    printf STDERR @_;
+    printf STDERR "\n";
+  }
+  exit 1;
+}
+
 1;
 
 =pod:synopsis
