@@ -2,7 +2,6 @@
 use strict;
 use Data::Hub qw($Hub);
 use Data::Hub::Util qw(path_name);
-use Parse::Template::Standard;
 binmode STDOUT, ':utf8';
 
 sub usage {
@@ -18,6 +17,7 @@ options:
   -p|-prompt  Prompt for undefined scalar values
   -b|-begin   Begin sequence, default: [#
   -e|-end     End sequence, default: ]
+  -t|-type    Parser type (Parse::Template::___) default is 'Standard'
   -use        Address to data which is placed in the context
   ...         Other options are placed in the context (used)
 notes:
@@ -51,18 +51,31 @@ if (_take_opt('h', 'help')) {
   exit 0;
 }
 
+my $TYPE = _take_opt('t', 'type') || 'Standard';
 my $DEBUG = _take_opt('d', 'debug');
 my $PROMPT = _take_opt('p', 'prompt');
 my $BEG = _take_opt('b', 'begin');
 my $END = _take_opt('e', 'end');
-my $filename = shift @$ARGV or die "Please provide a filename\n";
-my $addr = $Hub->path_to_addr($filename) or die "Cannot resolve: $filename\n";
+my $template_text = '';
+my $template_addr = '';
+if (my $filename = shift @$ARGV) {
+  $template_addr = $Hub->path_to_addr($filename)
+    or die "Cannot resolve: $filename\n";
+} else {
+  {
+    local $/ = undef; # slurp
+    $template_text = <STDIN>;
+  }
+}
 my $parser_opts = {};
 $BEG and $$parser_opts{'begin'} = $BEG;
 $END and $$parser_opts{'end'} = $END;
 my $out = '';
 $$parser_opts{'out'} = \$out;
-my $p = Parse::Template::Standard->new($Hub, -opts => $parser_opts);
+
+eval {require "Parse/Template/$TYPE.pm"};
+die $@ if $@;
+my $p = "Parse::Template::$TYPE"->new($Hub, -opts => $parser_opts);
 if ($DEBUG) {
   require Parse::Template::Debug::Debugger;
   Parse::Template::Debug::Debugger::attach($p);
@@ -71,11 +84,16 @@ if ($DEBUG) {
   Parse::Template::Debug::Prompt::attach($p);
 }
 if (my $use = _take_opt('use')) {
-  $p->use($$Hub{$use});
+  $p->use($$Hub{$_}) for split /\s*[,]\s*/, $use;
 }
 $p->use($$Hub{'/sys/ENV'});
 $p->use($$Hub{'/sys/OPTS'});
-$p->compile($addr);
+if ($template_addr) {
+  $p->compile($template_addr);
+}
+if ($template_text) {
+  $p->compile_text(\$template_text);
+}
 if (!$DEBUG) {
   print $out;
 }
