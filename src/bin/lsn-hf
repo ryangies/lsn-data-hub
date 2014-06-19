@@ -88,9 +88,9 @@ sub get {
   my $value_addr = shift or die "No address provided";
   my $value = $Hub->get($value_addr);
   if ('hf' eq $$opts{'f'}) {
-    $self->printf("%s", hf_format(\$value));
+    $self->printf("%s", hf_format(ref $value ? $value : \$value));
   } elsif ('json' eq $$opts{'f'}) {
-    $self->printf("%s", js_format(\$value));
+    $self->printf("%s", js_format(ref $value ? $value : \$value));
   } else {
     $self->fail(sprintf("Unkown output format: %s", $$opts{'f'}));
   }
