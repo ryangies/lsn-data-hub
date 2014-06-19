@@ -52,6 +52,9 @@ our %Directives = (
   'subst'   => [\&_eval_subst], # deprecated Mar 15 2012
 );
 
+use Parse::Template::Directives::Base64;
+$Directives{'base64'} = Parse::Template::Directives::Base64->new();
+
 # Common access to parts of an address
 
 $Directives{'addr'} = {};

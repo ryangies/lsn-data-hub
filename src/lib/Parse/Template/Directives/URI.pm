@@ -23,7 +23,7 @@ $Directives{'url'}[0] = sub {
 $Directives{'encode'}[0] = sub {
   my $value = _getvstr(\@_);
   return unless defined $value;
-  $value =~ s/([^A-Za-z0-9_])/sprintf("%%%02X", ord($1))/eg;
+  $value =~ s/([^A-Za-z0-9_~\.\-])/sprintf("%%%02X", ord($1))/eg;
   $value;
 };
 
