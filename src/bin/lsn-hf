@@ -17,6 +17,7 @@ our %USAGE = ();
 $USAGE{'convert'} = {
   summary => 'Convert from one file type to another',
   params => Data::OrderedHash->new(
+    '-d <directory>' => 'Run from the perspective of <directory>',
     '<source>' => 'Source filename',
     '<dest>' => 'Dest filename',
   ),
@@ -39,6 +40,7 @@ sub convert {
 $USAGE{'chenc'} = {
   summary => 'Encode characters as numeric entities',
   params => Data::OrderedHash->new(
+    '-d <directory>' => 'Run from the perspective of <directory>',
     '<source>' => 'Source filename',
   ),
 };
@@ -74,6 +76,7 @@ $USAGE{'get'} = {
   summary => 'Get a value',
   params => Data::OrderedHash->new(
     '<address>' => 'Address of value',
+    '-d <directory>' => 'Run from the perspective of <directory>',
     '-n' => 'Do not output the trailing newline',
     '-f' => 'Output format: hf|json',
   ),
@@ -106,6 +109,7 @@ $USAGE{'set'} = {
   params => Data::OrderedHash->new(
     '<address>' => 'Address of value to set',
     '<value>' => 'Value to be set',
+    '-d <directory>' => 'Run from the perspective of <directory>',
 #   '-f' => 'Input format: hf|json',
   ),
 };
@@ -128,4 +132,7 @@ sub set {
 
 package main;
 use Data::Hub qw($Hub);
+if (my $hub_root = $$Hub{'/sys/OPTS/d'}) {
+  Data::Hub::Relocate($hub_root);
+}
 App::Livesite::HashFile->new()->exec(@ARGV);

@@ -23,6 +23,7 @@ sub FMT_UTC       {'%a, %d %b %Y %H:%M:%S UTC'};
 sub FMT_GMT       {'%a, %d %b %Y %H:%M:%S GMT'};
 sub FMT_RFC3339   {'%Y-%m-%dT%H:%M:%SZ'};
 sub FMT_RFC822    {'%a, %d %b %Y %H:%M:%S %z'};
+sub FMT_HIRES     {'%s.%f'};
 
 #sub FMT_ISO8601   {'%G-%I-%dT%H:%M:%S'};
 
@@ -31,6 +32,7 @@ our @FORMATS = qw(
   FMT_GMT
   FMT_RFC822
   FMT_RFC3339
+  FMT_HIRES
 );
 
 our @EXPORT = ();
@@ -59,6 +61,7 @@ $DEFAULT{num} = {
   '00_99'           => '(\d{2})',
   '000_999'         => '(\d{3})',
   '0000_9999'       => '(\d{4})',
+  '000_99999'       => '(\d{3,5})',
   '01_31'           => '(0[1-9]|[12]\d|3[01])',
   '1_31'            => '( [1-9]|[12]\d|3[01])',
   '00_23'           => '([01]\d|2[0-3])',

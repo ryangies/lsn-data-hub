@@ -145,7 +145,7 @@ sub get_directive {
 sub compile {
   my $self = shift;
   my $addr = shift or throw Error::MissingArg;
-  my $node = $self->get_value(\$addr);
+  my $node = $self->get_value(\$addr) or warn "Cannot find template: $addr";
   my $text = $self->value_to_string($node);
   return unless defined $text;
   my $path = addr_parent($addr);

@@ -144,7 +144,10 @@ sub _query_type {
 #
 # The general form is:
 #
-#   {?key(opr):val}
+#   {?[!]key(opr):val}
+#
+# The leading C<!> negation symbol, when present, inverts the result of the
+# comparson.
 #
 # However both C<opr> and C<key> are optional.
 #
@@ -155,7 +158,10 @@ sub _query_type {
 #                   # returned instead of a subset.
 #
 #   {?:val}         # Without the key or operator, a single value (first match)
-#                   # is returned.  All values are compared.
+#                   # is returned. All values are compared.
+#
+#   {?key}          # With only the key, the result is items where the value
+#                   # at that key is logically true.
 #
 # When the C<opr> is omitted, the 'eq' operator is used in comparisons.
 #
@@ -192,6 +198,7 @@ sub _query_type {
 #   {?id(==):1234}            # set of all values whose id is 1234 (numerically)
 #   {?first name(eq):Ryan}    # set of all users whose 'first name' is Ryan
 #   {?group(=~):aeiou}        # set of all values whose group contains a vowel
+#   {?!disabled}              # set of all values which are not 'disabled'
 #
 #
 # TODO - Query before expansion
@@ -212,11 +219,13 @@ sub _query_type {
 
 sub _query_compare {
   my ($struct, $crit) = @_;
-  my ($key, $opr, $val) =
-    $crit =~ /^((?:(?<=\\)[():]|[^():])*)(?:\((.{1,4})\))?:?(.+)?/;
+  my ($negate, $key, $opr, $val) =
+    $crit =~ /^(!?)((?:(?<=\\)[():]|[^():])*)(?:\((.{1,4})\))?:?(.+)?/;
   $val = '' unless defined $val;
   undef $key if defined $key && $key eq '';
   $key =~ s/\\([:()_])/$1/g if defined $key; # unescape
+  my $truth = !$negate;
+#warn "Truth=$truth, $crit\n";
 #warn "Query for: $key $opr $val\n";
   if (defined $opr) {
     # Return a subset of matches
@@ -224,28 +233,27 @@ sub _query_compare {
     if (!defined $key) {
       # Query the key
       Data::Hub::Courier::iterate($struct, sub {
-        $result->_set_value(@_) if compare($opr, $_[0], $val);
+        $result->_set_value(@_) unless $truth xor compare($opr, $_[0], $val);
       });
     } elsif ($key eq '*') {
       # Query all values
-      Data::Hub::Courier::iterate($struct, sub {
-        $result->_set_value(@_) if compare($opr, $_[1], $val);
-      });
+      if ($truth) {
+        Data::Hub::Courier::iterate($struct, sub {
+          $result->_set_value(@_) if compare($opr, $_[1], $val);
+        });
+      }
     } else {
       # Query a property of each value
       Data::Hub::Courier::iterate($struct, sub {
         my $vv = Data::Hub::Courier::get($_[1], $key);
 #warn "Compare: $vv $opr $val";
-        $result->_set_value(@_) if compare($opr, $vv, $val);
+        $result->_set_value(@_) unless $truth xor compare($opr, $vv, $val);
       });
     }
     return $result;
   } elsif (defined $key && $val eq '') {
-    my $truth = 1;
-    if (substr($key, 0, 1) eq '!') {
-      $key = substr($key, 1);
-      $truth = 0;
-    }
+    # Query for items where a subkey is logically true or false. Keys which do
+    # not exist are treated as false.
     my $result = Data::Hub::Subset->new();
     Data::Hub::Courier::iterate($struct, sub {
       my $vv = Data::Hub::Courier::get($_[1], $key);
@@ -261,7 +269,7 @@ sub _query_compare {
     if (!defined $key) {
       # Query the key
       foreach my $k (Data::Hub::Courier::keys($struct)) {
-        next unless defined $k && addr_name($k) eq $val;
+        next unless defined $k && !($truth xor (addr_name($k) eq $val));
         $r_key = $k;
         $r_val = Data::Hub::Courier::_get_value($struct, $k);
         last;
@@ -271,7 +279,7 @@ sub _query_compare {
       foreach my $k (Data::Hub::Courier::keys($struct)) {
         $r_key = $k;
         $r_val = Data::Hub::Courier::_get_value($struct, $k);
-        last if defined $r_val && $r_val eq $val;
+        last if defined $r_val && !($truth xor ($r_val eq $val));
         undef $r_val;
         undef $r_key;
       }
@@ -281,12 +289,12 @@ sub _query_compare {
         $r_key = $k;
         $r_val = Data::Hub::Courier::_get_value($struct, $k);
         my $vv = Data::Hub::Courier::get($r_val, $key);
-        last if defined $vv && $vv eq $val;
+        last if defined $vv && !($truth xor ($vv eq $val));
         undef $r_val;
         undef $r_key;
       }
     }
-    # Wrap the first match in a subset if already in a subset.  This maintains
+    # Wrap the first match in a subset if already in a subset. This maintains
     # the knowledge of the matched key.
 #   if (isa($struct, 'Data::Hub::Subset')) {
 #     my $r = Data::Hub::Subset->new();

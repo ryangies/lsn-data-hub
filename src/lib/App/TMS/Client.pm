@@ -34,8 +34,10 @@ sub new {
   my $repo_dir = $client->{"$TMS_SETTINGS/repo_dir"};
   my $repo = undef;
   try {
-    my $abs = path_is_absolute($repo_dir) ? $repo_dir : path_join(cwd(), $repo_dir);
-    $repo = $repo_dir ? Data::Hub->new($abs) : undef;
+    if ($repo_dir) {
+      my $abs = path_is_absolute($repo_dir) ? $repo_dir : path_join(cwd(), $repo_dir);
+      $repo = Data::Hub->new($abs);
+    }
   } catch Error::Simple with {
     warnf "Current repository is invalid ($@): %s\n", $repo_dir;
   };
@@ -698,7 +700,7 @@ sub _compile {
         dir_create($inst->{target});
         my $rel_path =
           $self->{client}->path_relative($inst->{target}) || $inst->{target};
-        $self->print('Wrote: ', $target_path, "\n");
+        $self->print('Wrote: ', $inst->{'target'}, "\n");
       }
     }
     # Process directory entries
@@ -721,7 +723,7 @@ sub _compile {
     file_copy($template_path, $target_path);
     throw Error::Simple "Copy error: $inst->{template}\n"
       unless -e $target_path;
-    $self->print('Wrote: ', $target_path, " (copy)\n");
+    $self->print('Wrote: ', $inst->{'target'}, " (copy)\n");
   } else {
     # Compile template files
     $inst->{dep_checksums} = Data::OrderedHash->new();
@@ -736,15 +738,11 @@ sub _compile {
       } else {
         $loc = 'client';
         $node = $self->{client}{$path};
-        my $storage = $self->{client}->addr_to_storage($path);
-        $path = $storage->get_addr();
       }
       throw Error::Simple "Missing: $_\n" unless $node;
       push @use, $node;
-      my $content = $node->to_string() or
-        throw Error::Simple "Undefined content for: $_\n";
-#warnf "USE dependency: $_ -> $path\n";
-      $inst->{dep_checksums}{"$loc:$path"} = _checksum($node->to_string());
+      $inst->{dep_checksums}{"$loc:$path"} = _checksum($node);
+#warnf "USE dependency: %s $_ -> $path\n", $inst->{dep_checksums}{"$loc:$path"};
     }
     my $repo_hist = {}; # Recognize dependancies by tracking file access
     my $client_hist = {}; # Recognize dependancies by tracking file access
@@ -760,11 +758,11 @@ sub _compile {
     chomp $$result; $$result .= "\n"; # ensure nl at eof
     # Add dependencies
     my $t_addr = $inst->{template};
-    $inst->{dep_checksums}{"repo:$t_addr"} = _checksum($self->{repo}->str($t_addr));
+    $inst->{dep_checksums}{"repo:$t_addr"} = _checksum($self->{repo}->get($t_addr));
     for (keys %$repo_hist) {
       my $addr = $self->{repo}->path_to_addr($_) || $_;
       next if $inst->{template} =~ /^$addr/;
-      $inst->{dep_checksums}{"repo:$addr"} = _checksum($self->{repo}->str($addr));
+      $inst->{dep_checksums}{"repo:$addr"} = _checksum($self->{repo}->get($addr));
     }
     for (keys %$client_hist) {
       my $addr = $self->{client}->path_to_addr($_) || $_;
@@ -773,17 +771,18 @@ sub _compile {
       next if $addr eq '/'; # TODO Inspect fs_access code to see why, for this is bogus
                             # (while debugging config/daemon.opts)
 #warnf "Template dependency: $_ -> $addr\n";
-      $inst->{dep_checksums}{"client:$addr"} = _checksum($self->{client}->str($addr));
+      $inst->{dep_checksums}{"client:$addr"} = _checksum($self->{client}->get($addr));
     }
     # Output result
     if ($inst->{target}) {
       $self->{client}->{$inst->{target}} = $result;
       $self->{client}->{$inst->{target}}->save;
       # TODO change file permissions according  to source
-      $self->print('Wrote: ', $target_path, "\n") unless $opts->{quiet};
+      $self->print('Wrote: ', $inst->{'target'}, "\n") unless $opts->{quiet};
       # Compute checksum
-      my $str = $self->{client}->str($inst->{target});
-      $inst->{checksum} = _checksum($str);
+      my $target = $self->{client}->get($inst->{target});
+      $inst->{checksum} = _checksum($target);
+#warnf "CHECKSUM: %s (%s)\n", $inst->{checksum}, $target->get_addr;
     } else {
       $self->print($$result);
     }
@@ -837,34 +836,27 @@ sub _get_status {
     return $template_node->get_mtime > $target->get_mtime
       ? $STATUS_TARGET_MODIFIED
       : $STATUS_OK;
+  } elsif (_checksum($target) != $inst->{checksum}) {
+#warnf "CHECKSUM: %s (%s)\n", _checksum($target), $target->get_addr;
+    return $STATUS_TARGET_MODIFIED;
   }
-  my $content = $target->to_string;
-#warn _checksum($content), ' ? ', $inst->{checksum};
-  return $STATUS_TARGET_MODIFIED
-    unless _checksum($content) == $inst->{checksum};
   # Check dependencies
   if ($inst->{dep_checksums}) {
     my $status = $STATUS_OK;
     foreach my $spec ($inst->{dep_checksums}->keys) {
       my $sum = $inst->{dep_checksums}{$spec};
+#warnf "DEP CHECKSUM: %s (%s)\n", $sum, $spec;
       my ($ds, $addr) = $spec =~ /([a-z]+):(.*)/;
-      my $content;
-      if ($ds eq 'abs') {
-        $content = FS('Node')->new($addr)->to_string();
-      } else {
-        my $hub = $self->{$ds};
-        my $storage = $hub->addr_to_storage($addr);
-#warnf "STATUS %s -> %s\n", $addr, $storage->get_addr();
-        $content = $storage->to_string() if $storage;
-      }
-      if (!$content) {
+      my $dep_node = $ds eq 'abs'
+        ? FS('Node')->new($addr)
+        : $self->{$ds}->get($addr);
+      if (!$dep_node) {
 #warn "$spec is missing\n";
         $status = $STATUS_TEMPLATE_MISSING;
         last;
       }
-#warn $sum, ' ? ', _checksum($content), "\n";
-      if ($sum != _checksum($content)) {
-#warn "$spec is modified\n";
+      if ($sum != _checksum($dep_node)) {
+#warn "$spec is modified: ", _checksum($dep_node), " != $sum\n";
         $status = $STATUS_TEMPLATE_MODIFIED;
         last;
       }
@@ -877,9 +869,12 @@ sub _get_status {
 }
 
 sub _checksum {
-  my $str = shift;
-  chomp $str; $str .= "\n"; # ensure nl at eof
-  checksum($str);
+  my $unk = shift;
+  my $str = isa($unk, FS('Node')) ? $unk->get_raw_content : hf_format($unk);
+  $str = isa($str, 'SCALAR') ? $$str : $str;
+  my $sum = checksum $str;
+#warnf "CHECKSUM: %s (%s)\n", $sum, $unk;
+  $sum;
 }
 
 sub _save_instance_db {
