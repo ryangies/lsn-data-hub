@@ -107,7 +107,7 @@ sub format {
     my $num = 1;
     foreach my $v (@$item) {
       my $out = $self->format($v);
-      $out .= "," unless $num == $num_items;
+      $out .= "," unless $num++ == $num_items;
       $result .= $self->append($out);
     }
     $$self{'depth'}--;
