@@ -4,6 +4,7 @@ our $VERSION = 0;
 
 use Perl::Module;
 use Error::Programatic;
+use Scalar::Util qw(looks_like_number);
 use base qw(Exporter);
 
 our @EXPORT_OK = qw(
@@ -145,7 +146,8 @@ sub format_value {
   my $self = shift;
   my $value = shift;
   isa($value, 'SCALAR') and $value = $$value;
-  return $value if $value =~ /^(null|NaN|undefined|true|false|[0-9]|[1-9]\d+|\s*function\s*\()$/;
+  return $value if looks_like_number($value);
+  return $value if $value =~ /^(null|NaN|undefined|true|false|\s*function\s*\()$/;
   return $self->format_string($value);
 }
 
