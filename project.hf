@@ -8,7 +8,7 @@ license => mit
 version => @{
   5
   0
-  277
+  278
 }
 scripts => @{
   src/bin/lsn-pm-install
