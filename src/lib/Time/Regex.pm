@@ -21,8 +21,8 @@ use I18N::Langinfo qw(
 # When $t is in gmtime (for localtime, use %Z to get EDT, e.g.)
 sub FMT_UTC       {'%a, %d %b %Y %H:%M:%S UTC'};
 sub FMT_GMT       {'%a, %d %b %Y %H:%M:%S GMT'};
-sub FMT_RFC3339   {'%Y-%m-%dT%H:%M:%SZ'};
 sub FMT_RFC822    {'%a, %d %b %Y %H:%M:%S %z'};
+sub FMT_RFC3339   {'%Y-%m-%dT%H:%M:%SZ'};
 sub FMT_HIRES     {'%s.%f'};
 
 #sub FMT_ISO8601   {'%G-%I-%dT%H:%M:%S'};
