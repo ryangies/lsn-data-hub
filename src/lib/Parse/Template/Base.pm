@@ -161,7 +161,7 @@ sub compile {
 
 sub compile_text(\$\$@) {
   my $self = shift;
-  my $text = shift;
+  my $text = str_ref(shift);
   throw Error::IllegalArg '$text must be a scalar reference'
     unless isa($text, 'SCALAR');
   my $opts = my_opts(\@_);
