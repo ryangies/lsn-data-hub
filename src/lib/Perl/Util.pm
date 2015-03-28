@@ -443,6 +443,15 @@ our %Time_Formats = (
 # strftime -localtime
 # strftime -time => 'Sun, 30 Dec 1973 00:00:00 -0400'
 # strftime -time => '1973-12-30' -time_format => '%Y-%m-%d'
+# 
+# Notes:
+#
+#   -time
+#           When passing in time as seconds (%s), they must be
+#           UTC seconds. This is because Time::Piece::strptime interprets
+#           them this way, and it is the right thing to do if you're
+#           in the business of using seconds.
+#   
 sub strftime {
   my $opts = my_opts(\@_);
   my $format = FMT_RFC822;
@@ -454,8 +463,9 @@ sub strftime {
     my $fmt_time = $$opts{'time_format'} || $$opts{'time-format'}
         || $Strptime->compare($val_time, values %Time_Formats);
     if ($fmt_time) {
+#     warn "Reading time '$val_time' using format: $fmt_time\n";
       $time = Time::Piece->strptime($val_time, $fmt_time);
-      if ($$opts{'localtime'}) {
+      if ($$opts{'localtime'} || ($fmt_time eq $Time_Formats{'seconds'})) {
         my $tz = DateTime::TimeZone->new(name => 'local');
         my $dt = DateTime->new(
           year       => $time->year,
@@ -468,7 +478,8 @@ sub strftime {
           time_zone  => 'GMT',
         );
         my $offset = $tz->offset_for_datetime($dt);
-        $time += $offset;
+        $time += $offset if $fmt_time eq $Time_Formats{'seconds'};
+        $time += $offset if $$opts{'localtime'};
       }
     } else {
       warn "Cannot detect time format: $val_time";
@@ -477,6 +488,9 @@ sub strftime {
   } else {
     my $t = Time::Piece->new; # Current time
     $time = $$opts{'localtime'} ? $t->localtime : $t->gmtime
+  }
+  unless ($$opts{'localtime'}) {
+    $format =~ s/\%[zZ]\b/UTC/;
   }
   return $time->strftime($format);
 }

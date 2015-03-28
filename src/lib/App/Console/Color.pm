@@ -17,7 +17,7 @@ our %ColorAlias = (
   'c'=>CYAN,      'C'=>CYAN.BOLD,
 );
 
-our $ColorChars = join '', keys %ColorAlias;
+our $ColorChars = '\^\*rRgGbByYmMcC';
 
 sub c_length {
   my $len = 0;

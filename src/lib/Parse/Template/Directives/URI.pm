@@ -36,6 +36,14 @@ $Directives{'decode'}[0] = sub {
   $value;
 };
 
+$Directives{'urlencoded'}[0] = sub {
+  my $parser = $_[0];
+  my $value = _getvstr(\@_);
+  return unless defined $value;
+  $parser->get_ctx->{'collapse'} = 1;
+  _query_escape($value);
+};
+
 sub _mk_url {
   my $value = shift or return;
   my $add_slash = $value =~ /\/$/;

@@ -42,6 +42,7 @@ our %Directives = (
   'replace' => [\&_eval_replace],
   'substr'  => [\&_eval_substr],
   'sprintf' => [\&_eval_sprintf],
+  'indent'  => [\&_eval_indent],
   'join'    => [\&_eval_join],
   'split'   => [\&_eval_split],
   'lc'      => {'*' => [\&_eval_lc], 'first' => [\&_eval_lc_first]},
@@ -797,6 +798,9 @@ sub _eval_replace {
 }
 
 sub _get_lines {
+  my $opts = my_opts(\@_, {
+    keep_indent => 0,
+  });
   my $self = shift;
   my $name = shift;
   my $value;
@@ -813,14 +817,39 @@ sub _get_lines {
   if (can($value, 'values')) {
     @values = $value->values;
   } else {
-    @values = split /[ \t]*[\r\n]+[ \t]*/, $value
+    if ($$opts{'keep_indent'}) {
+      @values = split /[ \t\r]*\n[\r]*/, $value
+    } else {
+      @values = split /[ \t\r]*\n[ \t\r]*/, $value
+    }
   }
   foreach my $line (map {scalar($_)} @values) {
-    $line =~ s/^\s+//;
+    $line =~ s/^\s+// unless $$opts{'keep_indent'};
     $line =~ s/\s+$//;
     push @lines, $line;
   }
   @lines;
+}
+
+# [#:indent array]             indent values
+# [#:indent hash]              indent values
+# [#:indent scalar]            indent on newlines
+# [#:indent ] ... [#:end indent] indent on newlines
+#   -num_chars => 2
+#   -use_tabs => 1
+sub _eval_indent {
+  my $self = shift;
+  my $name = shift;
+  my $opts = my_opts(\@_, {
+    num_chars => 4,
+    use_tabs => 0,
+  });
+  my $num_chars = int($$opts{'num_chars'});
+  my $char = $$opts{'use_tabs'} ? "\t" : ' ';
+  my $line_prefix = $char x= $num_chars;
+  my @lines = $self->_get_lines($name, -keep_indent => 1, @_);
+  $self->get_ctx->{'collapse'} = 0;
+  $line_prefix . join("\n" . $line_prefix, @lines);
 }
 
 # [#:join ' ', array]             trims and joins values
@@ -948,45 +977,6 @@ sub _eval_uc_first {
 # Time
 # ------------------------------------------------------------------------------
 
-use Time::Piece qw();
-use Time::Regex qw(:formats);
-use Time::Regex::Strftime;
-use Time::Regex::Strptime;
-use DateTime;
-use DateTime::TimeZone;
-our $Strftime = Time::Regex::Strftime->new();
-our $Strptime = Time::Regex::Strptime->new();
-
-# %Time_Formats - Alias and values in strftime format.
-#
-# These values will be used by Time::Piece to both parse (strptime) and format
-# (strftime) a given time.
-
-our %Time_Formats = (
-
-  seconds   => '%s',                               # Seconds since the epoch
-
-  # I18N::Langinfo
-  d_fmt     => $$Strftime{'d_fmt'},                # %x
-  t_fmt     => $$Strftime{'t_fmt'},                # %X
-  d_t_fmt   => $$Strftime{'d_t_fmt'},              # %c
-  lc_time   => $$Strftime{'lc_time'},              # %+
-  d_us_fmt  => $$Strftime{'d_us_fmt'},             # %D
-
-  # Not sure what to name these
-  _TODO_    => '%Y-%m-%d',                         # %F
-  _TODO_    => '%a %b %d %H:%M:%S %Z %Y',          # Thu Mar 15 11:54:13 EDT 2012
-  _TODO_    => '%a %b %d %H:%M:%S %Y',             # Thu Mar 15 11:54:13 2012
-
-  # More common names
-  utc       => FMT_UTC,
-  gmt       => FMT_GMT,
-  rfc822    => FMT_RFC822,
-  rfc3339   => FMT_RFC3339,
-  hires     => FMT_HIRES,
-
-);
-
 # :strftime
 # :strftime 'alias'
 # :strftime '%Y-%m-%d'
@@ -997,43 +987,9 @@ sub _eval_strftime {
   my $self = shift;
   my $name = shift;
   my $opts = $self->get_opts(\@_);
-  my $format = FMT_RFC822;
-  if (@_) {
-    my $arg = shift;
-    my $spec = $self->get_value_str(ref $arg ? $arg : \$arg);
-    $spec and $format = $Time_Formats{$spec} || $spec;
-  }
-  my $time;
-  if (my $val_time = $$opts{'time'}) {
-    my $fmt_time = $$opts{'time-format'}
-        || $Strptime->compare($val_time, values %Time_Formats);
-    if ($fmt_time) {
-      $time = Time::Piece->strptime($val_time, $fmt_time);
-      if ($$opts{'localtime'}) {
-        my $tz = DateTime::TimeZone->new(name => 'local');
-        my $dt = DateTime->new(
-          year       => $time->year,
-          month      => $time->mon,
-          day        => $time->day_of_month,
-          hour       => $time->hour,
-          minute     => $time->min,
-          second     => $time->sec,
-          nanosecond => 0,
-          time_zone  => 'GMT',
-        );
-        my $offset = $tz->offset_for_datetime($dt);
-        $time += $offset;
-      }
-    } else {
-      warn "Cannot detect time format: $val_time";
-      return $val_time;
-    }
-  } else {
-    my $t = Time::Piece->new; # Current time
-    $time = $$opts{'localtime'} ? $t->localtime : $t->gmtime
-  }
+  my $spec = $self->get_value_str(ref $_[0] ? $_[0] : \$_[0]) if @_;
   $self->get_ctx->{'collapse'} = 0;
-  return $time->strftime($format);
+  return strftime($spec, -opts => $opts);
 }
 
 1;
