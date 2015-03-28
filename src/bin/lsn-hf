@@ -8,6 +8,7 @@ use Data::Hub::Courier;
 use HTML::Entities ();
 use Data::Format::Hash qw(:all);
 use Data::Format::JavaScript qw(:all);
+use Data::Format::Xml qw(:all);
 use base 'App::Console::CommandScript';
 
 our %USAGE = ();
@@ -78,7 +79,7 @@ $USAGE{'get'} = {
     '<address>' => 'Address of value',
     '-d <directory>' => 'Run from the perspective of <directory>',
     '-n' => 'Do not output the trailing newline',
-    '-f' => 'Output format: hf|json',
+    '-f' => 'Output format: hf|json|xml',
   ),
 };
 
@@ -90,10 +91,13 @@ sub get {
   });
   my $value_addr = shift or die "No address provided";
   my $value = $Hub->get($value_addr);
+  my $ref = ref $value ? $value : \$value;
   if ('hf' eq $$opts{'f'}) {
-    $self->printf("%s", hf_format(ref $value ? $value : \$value));
+    $self->printf("%s", hf_format($ref));
   } elsif ('json' eq $$opts{'f'}) {
-    $self->printf("%s", js_format(ref $value ? $value : \$value));
+    $self->printf("%s", js_format($ref));
+  } elsif ('xml' eq $$opts{'f'}) {
+    $self->printf("%s", xml_format($ref, -indent => '  '));
   } else {
     $self->fail(sprintf("Unkown output format: %s", $$opts{'f'}));
   }
@@ -132,7 +136,12 @@ sub set {
 
 package main;
 use Data::Hub qw($Hub);
+
+$Hub->add_handler(q/Data::Hub::FileSystem::XMLHash/, -type => 'T', -path => '\.xml$');
+$Hub->add_handler(q/Data::Hub::FileSystem::XMLHash/, -type => '!', -path => '\.xml$');
+
 if (my $hub_root = $$Hub{'/sys/OPTS/d'}) {
   Data::Hub::Relocate($hub_root);
 }
+
 App::Livesite::HashFile->new()->exec(@ARGV);
