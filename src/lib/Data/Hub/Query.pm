@@ -314,6 +314,7 @@ sub _query_compare {
 sub _query_position {
   my ($struct, $crit) = @_;
   my $result = Data::Hub::Subset->new();
+  return $result unless defined $struct;
   my @segments = split ',', $crit;
   my $p = 0;
   for (@segments) {
