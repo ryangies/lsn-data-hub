@@ -72,7 +72,7 @@ sub _query_expansion {
 # $_[1] eq '*' and return Data::Hub::ExpandedSubset->new($_[0]);
   $_[1] =~ s/(?<!\\)\./\\./g; # TODO escape other character classes
   $_[1] =~ s/(?<!\\)\*/.*/g;
-  _query($_[0], '?(=~):' . $_[1]);
+  _query($_[0], '?(=~):' . '^' . $_[1] . '$');
 }
 
 # {:first}

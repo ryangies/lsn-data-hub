@@ -475,7 +475,7 @@ sub eval_directive {
   $name eq $self->{cs} and $name = shift @$fields;
   throw Error::Programatic unless defined $name;
   my $sub = $self->get_directive($name, $sub_idx) or return;
-  if (ref($sub) eq 'CODE') {
+  if (isa($sub, 'CODE')) {
     # Here is where we would resolve each field before passing
     # to the directive. This however is not done because the
     # directive gets to inspect each field and determine if it
@@ -712,9 +712,9 @@ sub dequote {
 
 sub get_value {
   my $self = shift;
-  my $addr = shift;
-  return unless defined $addr && defined $$addr;
-  $addr = $$addr if isa($addr, 'REF');
+  my $spec = shift;
+  return unless defined $spec && reftype($spec);
+  my $addr = ref($$spec) ? $$spec : $spec;
   if (isa($addr, 'Parse::Template::CallbackArgument')) {
     if ($$addr[0] =~ s/^$self->{ds}//) {
       return sub {

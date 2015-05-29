@@ -917,7 +917,8 @@ sub _eval_sprintf {
   isa($format, 'SCALAR') and $format = $$format;
   my @args = ();
   while (@_) {
-    my $s = $self->get_compiled_value(str_ref(shift));
+    my $arg = shift;
+    my $s = $self->get_compiled_value(\$arg);
     push @args, isa($s, 'SCALAR') ? $$s : $s;
   }
 #warn join '|', $format, @args;
