@@ -80,7 +80,7 @@ sub message {
   my @caller = caller(1);
   my $fmt = '[%s] [%s] <%s:%s> [%d] [%.4f] %s';
   my $msg = sprintf($fmt, $timestamp, $type, $caller[1], $caller[2], $$, $elapsed, join('', @_));
-  my $result = warn $msg . "\n";
+  my $result = CORE::warn $msg . "\n";
   $result;
 }
 
