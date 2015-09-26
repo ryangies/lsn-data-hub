@@ -30,6 +30,9 @@ $Directives{'js'} = Parse::Template::Directives::JS->new();
 use Parse::Template::Directives::URI;
 $Directives{'uri'} = Parse::Template::Directives::URI->new();
 
+use Parse::Template::Directives::Color;
+$Directives{'color'} = Parse::Template::Directives::Color->new();
+
 use Parse::Template::Directives::ContentEditable;
 tie my %CE_Directives, 'Parse::Template::Directives::ContentEditable';
 $Directives{'ce'} = \%CE_Directives;
