@@ -35,45 +35,6 @@ $BINARY_OPERATORS{'||'} = sub {
   $b;
 };
 
-=pod
-
-TODO - These will work, however the divide '/' could be mistaken
-when the arg really refers to the root node...
-
-TODO - Such math should be supported, however `eval` current takes
-the last arg on the stack and turns it into a boolean, rather than
-returning the computed value...
-
-$BINARY_OPERATORS{'+'} = sub {
-  my ($self, $y, $x) = @_;
-  my $y_val = $self->get_compiled_value($y);
-  my $x_val = $self->get_compiled_value($x);
-  $y_val + $x_val;
-};
-
-$BINARY_OPERATORS{'-'} = sub {
-  my ($self, $y, $x) = @_;
-  my $y_val = $self->get_compiled_value($y);
-  my $x_val = $self->get_compiled_value($x);
-  $y_val - $x_val;
-};
-
-$BINARY_OPERATORS{'*'} = sub {
-  my ($self, $y, $x) = @_;
-  my $y_val = $self->get_compiled_value($y);
-  my $x_val = $self->get_compiled_value($x);
-  $y_val * $x_val;
-};
-
-$BINARY_OPERATORS{'/'} = sub {
-  my ($self, $y, $x) = @_;
-  my $y_val = $self->get_compiled_value($y);
-  my $x_val = $self->get_compiled_value($x);
-  $y_val / $x_val;
-};
-
-=cut
-
 # Unary operators
 
 $UNARY_OPERATORS{'!'} = sub {
@@ -240,3 +201,44 @@ sub get_value {
 }
 
 1;
+
+__END__
+
+=pod
+
+TODO - These will work, however the divide '/' could be mistaken
+when the arg really refers to the root node...
+
+TODO - Such math should be supported, however `eval` current takes
+the last arg on the stack and turns it into a boolean, rather than
+returning the computed value...
+
+$BINARY_OPERATORS{'+'} = sub {
+  my ($self, $y, $x) = @_;
+  my $y_val = $self->get_compiled_value($y);
+  my $x_val = $self->get_compiled_value($x);
+  $y_val + $x_val;
+};
+
+$BINARY_OPERATORS{'-'} = sub {
+  my ($self, $y, $x) = @_;
+  my $y_val = $self->get_compiled_value($y);
+  my $x_val = $self->get_compiled_value($x);
+  $y_val - $x_val;
+};
+
+$BINARY_OPERATORS{'*'} = sub {
+  my ($self, $y, $x) = @_;
+  my $y_val = $self->get_compiled_value($y);
+  my $x_val = $self->get_compiled_value($x);
+  $y_val * $x_val;
+};
+
+$BINARY_OPERATORS{'/'} = sub {
+  my ($self, $y, $x) = @_;
+  my $y_val = $self->get_compiled_value($y);
+  my $x_val = $self->get_compiled_value($x);
+  $y_val / $x_val;
+};
+
+=cut

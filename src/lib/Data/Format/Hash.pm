@@ -314,9 +314,8 @@ sub _make_crown {
 # ------------------------------------------------------------------------------
 #|test(!abort) use Data::Format::Hash qw(hf_format);
 #|test(match) # Format a simple nested collection
-#|my $d = {foo=>{bar=>['tender','stool']},baz=>'biz'};
+#|my $d = {foo=>{bar=>['tender','stool']}};
 #|hf_format($d)
-#=baz => biz
 #=foo => %{
 #=  bar => @{
 #=    tender

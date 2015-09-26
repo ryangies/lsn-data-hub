@@ -220,10 +220,10 @@ __END__
 
   my $known = '%{Yw==${Y2hhcmxpZQ==}YQ==@{${YWxwaGE=}${YmV0YQ==}${Y29wcGVy}}Yg==%{dGhyZWU=${Mw==}b25l${MQ==}dHdv${Mg==}}}';
   my $str = $xfr->format($h);
-  die 'parse error' unless $str eq $known;
+  die "format error:\nstr: $str\n!= : $known" unless $str eq $known;
 
   my $h2 = $xfr->parse($str);
-  die 'format error' unless $h2->{a}[1] eq $h->{a}[1];
+  die 'parse error' unless $h2->{a}[1] eq $h->{a}[1];
 
 =pod:description
 
