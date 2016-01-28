@@ -5,10 +5,15 @@ src_dir => src/lib
 src_files => ALL
 abstract => Data Hub Core Bundle
 license => mit
+upload_cmd => scp
+upload_path => livesite.net:/var/www/dist
+#post_compile => @{
+#  ssh livesite.net ln -fs /var/www/dist/\${name}-\${version}.tgz /var/www/dist/\${name}-latest.tgz
+#}
 version => @{
   5
   0
-  288
+  289
 }
 scripts => @{
   src/bin/lsn-tc
