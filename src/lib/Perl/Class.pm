@@ -79,6 +79,6 @@ __END__
   package main;
   my $c = Foo->new();
   $c->{3} = 4;
-  join ':', (keys %$c, '|', keys %{$c->__});
+  join ':', (keys %$c, '|', sort keys %{$c->__});
 
 =cut
