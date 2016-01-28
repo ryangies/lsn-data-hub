@@ -205,20 +205,19 @@ __END__
 =test(!abort)
 
   use Data::Format::XFR;
+  use Data::OrderedHash;
 
-  my $h = {
+  my $h = Data::OrderedHash->new(
     a => ['alpha', 'beta', 'copper'],
     b => {
       one => 1,
-      two => 2,
-      three => 3,
     },
     c => 'charlie',
-  };
+  );
 
   my $xfr = Data::Format::XFR->new('base64');
 
-  my $known = '%{Yw==${Y2hhcmxpZQ==}YQ==@{${YWxwaGE=}${YmV0YQ==}${Y29wcGVy}}Yg==%{dGhyZWU=${Mw==}b25l${MQ==}dHdv${Mg==}}}';
+  my $known = '%{YQ==@{${YWxwaGE=}${YmV0YQ==}${Y29wcGVy}}Yg==%{b25l${MQ==}}Yw==${Y2hhcmxpZQ==}}';
   my $str = $xfr->format($h);
   die "format error:\nstr: $str\n!= : $known" unless $str eq $known;
 
