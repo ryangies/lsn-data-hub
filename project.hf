@@ -11,7 +11,6 @@ version => @{
   288
 }
 scripts => @{
-  src/bin/lsn-pm-install
   src/bin/lsn-tc
   src/bin/lsn-hf
   src/bin/lsn-nml
@@ -21,9 +20,45 @@ scripts => @{
   src/bin/lsn-tms-script
 }
 depends => %{
+  Carp => 0
+  Compress::Zlib => 0
+  Cwd => 0
+  Data::Dumper => 0
+  DateTime => 0
+  DateTime::TimeZone => 0
+  Digest::SHA1 => 0
+  Encode => 0
+  Error => 0
+  Error::Simple => 0
+  Exporter => 0
+  Fcntl => 0
+  File::Copy => 0
+  File::Spec => 0
+  HTML::Entities => 0
+  I18N::Langinfo => 0
+  Image::ExifTool => 0
+  Image::Size => 0
+  IO::Dir => 0
+  IO::File => 0
+  JSON::XS => 0
+  List::Util => 0
+  Math::Symbolic => 0
+  MIME::Base64 => 0
+  POSIX => 0
+  Scalar::Util => 0
+  Term::ANSIColor => 0
+  Term::ReadLine => 0
+  Term::Size => 0
+  Tie::Hash => 0
+  Tie::Scalar => 0
+  Time::HiRes => 0
+  Time::Piece => 0
+  Try::Tiny => 0
+  YAML::XS => 0
 }
 about => %{
   copyright.txt => ${
+    Copyright (C) 2014-2016 by Ryan Gies. All rights reserved.
     Copyright (C) 2006-2013 by Livesite Networks, LLC. All rights reserved.
     Copyright (C) 2000-2005 by Ryan Gies. All rights reserved.
     Redistribution and use in source and binary forms, with or without 
