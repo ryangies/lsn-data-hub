@@ -836,6 +836,7 @@ sub _get_lines {
 # [#:indent scalar]            indent on newlines
 # [#:indent ] ... [#:end indent] indent on newlines
 #   -num_chars => 2
+#   -char => ' '
 #   -use_tabs => 1
 sub _eval_indent {
   my $self = shift;
@@ -843,9 +844,10 @@ sub _eval_indent {
   my $opts = my_opts(\@_, {
     num_chars => 4,
     use_tabs => 0,
+    char => ' ',
   });
   my $num_chars = int($$opts{'num_chars'});
-  my $char = $$opts{'use_tabs'} ? "\t" : ' ';
+  my $char = $$opts{'char'} || $$opts{'use_tabs'} ? "\t" : ' ';
   my $line_prefix = $char x= $num_chars;
   my @lines = $self->_get_lines($name, -keep_indent => 1, @_);
   $self->get_ctx->{'collapse'} = 0;
