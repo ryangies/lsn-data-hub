@@ -1,0 +1,54 @@
+package Local::MyCSV;
+use strict;
+use Perl::Module;
+use Data::Hub qw($Hub);
+use Data::Hub::Util qw(:all);
+use Data::Format::Hash;
+use base qw(Data::Hub::FileSystem::Node);
+
+$Hub->add_handler2('Local::MyCSV', -type => 'T', -path => '\.csv$');
+$Hub->add_handler2('Local::MyCSV', -type => 'B', -path => '\.tsv$');
+
+sub __read_from_disk {
+  my $self = shift;
+  return unless $self->__path && -T $self->__path;
+  $self->__content(file_read($self->__path));
+  _parse($self->__content, $self->__data);
+}
+
+sub __write_to_disk {
+  my $self = shift;
+  die 'notimpl';
+  my $data = $self->__data;
+  foreach my $label (@{$$data{'columns'}}) {
+  }
+}
+
+#
+# TODO: Use Data::Format::CSV
+#
+#
+# sub _parse {
+#   my ($content, $data) = @_;
+#   my $line = 0;
+#   my @keys = ();
+#   $$data{'columns'} = \@keys;
+#   for (split /[\r\n]+/, $$content) {
+#     my @fields = map { s/"$//; s/^"//; $_ } split /(?<!\\)[,\t]/, $_;
+#     if ($line++ == 0) {
+#       @keys = @fields;
+#       next;
+#     }
+#     my $field = 0;
+#     my $hash = Data::OrderedHash->new();
+#     for (@fields) {
+#       $$hash{$keys[$field]} = $_;
+#       $field++;
+#     }
+#     push @{$$data{'rows'}}, $hash;
+#   }
+# }
+
+1;
+
+__END__
