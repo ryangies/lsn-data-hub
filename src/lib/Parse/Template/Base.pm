@@ -38,11 +38,11 @@ sub new {
     close_sep => ' ',
     directive => ':',
   });
-  bless {
+  my $self = bless {
     bs => $opts->{begin},
-    bc => substr($opts->{begin},0,1),
+    bc => _extract_ambigous_pattern_char($opts->{begin}),
     es => $opts->{end},
-    ec => substr($opts->{end},0,1),
+    ec => _extract_ambigous_pattern_char($opts->{end}),
     cs => $opts->{close},
     ds => $opts->{directive},
     bs_len => length($opts->{begin}),
@@ -59,6 +59,15 @@ sub new {
     dbgout => $opts->{dbgout},
     opts => $opts,
   }, (ref($class) || $class);
+  $self;
+}
+
+sub _extract_ambigous_pattern_char {
+  my $str = shift;
+  foreach my $c (split //, $str) {
+    return $c if $c =~ tr/[]<>{}//;
+  }
+  substr($str,0,1);
 }
 
 # ------------------------------------------------------------------------------
@@ -298,7 +307,6 @@ sub _find_regions {
   my $end_str = $_[1] || $self->{es};
   my $beg_len = length($beg_str);
   my $end_len = length($end_str);
-#warn "beg_str=$beg_str|end_str=$end_str\n";
   my $beg2_str = $_[0] ? $beg_str : $self->{bc};
   my $end2_str = $_[1] ? $end_str : $self->{ec};
   my $beg2_len = length($beg2_str);
@@ -314,7 +322,7 @@ sub _find_regions {
     last if $b < 0;
     $match->[0] = $b;
     $e = index $$txt, $end_str, $b;
-    my $b2 = index $$txt, $beg2_str, $b + $beg2_len;
+    my $b2 = index $$txt, $beg2_str, $b + $beg_len;
     while ($b2 > $b && $b2 < $e && $e > $b) {
       $match->[2] = 1;
       $e = index $$txt, $end_str, $e + $end_len;
