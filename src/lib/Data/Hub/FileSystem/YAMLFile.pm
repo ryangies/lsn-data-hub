@@ -2,7 +2,6 @@ package Data::Hub::FileSystem::YAMLFile;
 use strict;
 use Perl::Module;
 use YAML::XS qw();
-use Data::Hub::Util qw(file_read_binary);
 use base qw(Data::Hub::FileSystem::HashFile);
 
 # ------------------------------------------------------------------------------
