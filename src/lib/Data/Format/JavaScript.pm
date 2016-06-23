@@ -145,6 +145,7 @@ sub format_key {
 sub format_value {
   my $self = shift;
   my $value = shift;
+  isa($value, 'JSON::PP::Boolean') and return $value ? 'true' : 'false';
   isa($value, 'SCALAR') and $value = $$value;
   return $value if looks_like_number($value);
   return $value if $value =~ /^(null|NaN|undefined|true|false|\s*function\s*\()$/;
