@@ -925,6 +925,7 @@ sub _eval_sprintf {
   }
 #warn join '|', $format, @args;
   $self->get_ctx->{'collapse'} = 0;
+  no warnings 'uninitialized';
   sprintf $format, @args;
 }
 
