@@ -52,31 +52,44 @@ sub prompt {
 # options:
 # 
 #   -noempty  Require non-empty passwords
+#   -confirm  Require confirmation
 #   -sha1hex  Digest the password before returning
 # ------------------------------------------------------------------------------
 
 sub prompt_for_password {
   my $opts = my_opts(\@_, {
     noempty => 0,
+    confirm => 0,
     sha1hex => 0,
   });
+
   my $txt = shift || 'Password';
   my $strlen = length($txt) > length('again') ? length($txt) : 5;
-  my $pw1 = prompt(sprintf("%${strlen}s", $txt), -noecho);
-  my $pw2 = prompt(sprintf("%${strlen}s", 'again'), -noecho);
-  $pw1 = '' unless defined $pw1;
-  $pw2 = '' unless defined $pw2;
-  if ($pw1 eq $pw2) {
-    if (!$$opts{noempty} || $pw1 ne '') {
-      return Digest::SHA1::sha1_hex($pw1) if $$opts{sha1hex};
-      return $pw1;
-    } else {
+  my $is_valid = 0;
+  my $pw1;
+
+  while (!$is_valid) {
+    $pw1 = prompt(sprintf("%${strlen}s", $txt), -noecho);
+    $pw1 = '' unless defined $pw1;
+    if ($$opts{'noempty'} && $pw1 eq '') {
       print $Out "Passwords may not be empty\n";
+      next;
     }
-  } else {
-    print $Out "Passwords do not match\n";
+
+    if ($$opts{'confirm'}) {
+      my $pw2 = prompt(sprintf("%${strlen}s", 'again'), -noecho);
+      $pw2 = '' unless defined $pw2;
+      if ($pw1 ne $pw2) {
+        print $Out "Passwords do not match\n";
+        next;
+      }
+    }
+
+    $is_valid = 1;
   }
-  prompt_for_password()
+
+  return Digest::SHA1::sha1_hex($pw1) if $$opts{'sha1hex'};
+  return $pw1;
 }
 
 # ------------------------------------------------------------------------------
