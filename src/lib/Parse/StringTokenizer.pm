@@ -195,7 +195,7 @@ sub shift(\$$$) {
   my $self = CORE::shift;
   throw Error::NotStatic unless isa($self, __PACKAGE__);
   my $str = CORE::shift or return;
-  throw Error::Programatic('Provide a scalar reference')
+  confess
     unless isa($str, 'SCALAR');
   return $$str if (!defined $$str) || ($$str eq '');
   my @fields = $self->split($str);
@@ -213,7 +213,7 @@ sub pop(\$$) {
   my $self = CORE::shift;
   throw Error::NotStatic unless isa($self, __PACKAGE__);
   my $str = CORE::shift;
-  throw Error::Programatic('Provide a scalar reference')
+  confess
     unless isa($str, 'SCALAR');
   return unless defined $$str;
   my @fields = $self->unpack($str);
@@ -232,7 +232,7 @@ sub push(\$$) {
   my $self = CORE::shift;
   throw Error::NotStatic unless isa($self, __PACKAGE__);
   my $str = CORE::shift;
-  throw Error::Programatic('Provide a scalar reference')
+  confess
     unless isa($str, 'SCALAR');
   return unless defined $$str;
   my @fields = $self->unpack($str);
