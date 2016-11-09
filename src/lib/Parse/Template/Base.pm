@@ -737,7 +737,7 @@ sub get_value {
     }
   }
   return $addr unless isa($addr, 'SCALAR');
-  return if $$addr eq '';
+  return if !defined $$addr || $$addr eq '';
   my $c = substr($$addr, 0, 1);
   if (ord($c) < 65 || ord($c) == 96) {
     is_numeric($$addr) and return $$addr;
