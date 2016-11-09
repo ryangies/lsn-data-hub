@@ -25,7 +25,7 @@ sub csv_parse {
 # new - Local::Parse::CSV
 #
 # Local::Parse::CSV->new('export.csv');
-# Local::Parse::CSV->new('export.tsv', delimiter => "\t");
+# Local::Parse::CSV->new('export.tsv', delimeter => "\t");
 # ------------------------------------------------------------------------------
 
 sub new () {
@@ -99,7 +99,7 @@ sub _split() {
   my $result = [];
   my @field = ();
   my $accumulating = 0;
-  foreach my $fragment (split ',', $_[0]) {
+  foreach my $fragment (split $$self{'delimeter'}, $_[0]) {
     if ($fragment =~ s/^\"//) {
       $accumulating = 1;
     }
@@ -108,7 +108,7 @@ sub _split() {
     }
     push @field, $fragment;
     if (!$accumulating) {
-      my $value = join(',', @field);
+      my $value = join($$self{'delimeter'}, @field);
       $value =~ s/^\s+//;
       $value =~ s/\s+$//;
       $value = undef if defined $value && $value eq 'NULL';
