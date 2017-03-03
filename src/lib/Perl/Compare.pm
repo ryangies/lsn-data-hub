@@ -1,4 +1,4 @@
-package Perl::Compare;
+package Perl::Comparison;
 use strict;
 use Exporter;
 our $VERSION = 0.1;
@@ -14,7 +14,7 @@ push our @ISA, qw(Exporter);
 #
 # If you wanted to define an operator named C<opr>, you would:
 #
-#   Perl::Compare::COMPARISONS{'opr'} = sub {
+#   Perl::Comparison::COMPARISONS{'opr'} = sub {
 #     # your code here
 #   };
 #
@@ -177,7 +177,7 @@ sub sort_compare {
 # sort_keydepth $a, $b
 # The key is the solodus (/) character.
 # ------------------------------------------------------------------------------
-#|test(!abort) use Perl::Compare qw(sort_keydepth);
+#|test(!abort) use Perl::Comparison qw(sort_keydepth);
 #
 #|test(match) # The deepest elements come last
 #|join ';', sort {&sort_keydepth($a, $b)} qw(t/w/o o/ne th/r/e/e);
@@ -203,10 +203,10 @@ __END__
 
 =pod:synopsis
 
-  use Perl::Compare qw(compare);
+  use Perl::Comparison qw(compare);
   print compare('eq', 'abc', 'xyz') ? "True\n" : "False\n";
 
-  use Perl::Compare qw(sort_compare);
+  use Perl::Comparison qw(sort_compare);
   my @items = qw(The black cat climbed the green tree);
   sort { &sort_compare('cmp', $a, $b) } @items;
 

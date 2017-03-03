@@ -1,7 +1,7 @@
 package Parse::Template::ArgumentStack;
 use strict;
 use Perl::Module;
-use Perl::Compare qw(compare);
+use Perl::Comparison qw(compare);
 use Error::Programatic;
 use Error::Logical;
 use Data::Hub::Util qw(FS %TYPEOF_ALIASES typeof curry);
@@ -11,7 +11,7 @@ our %UNARY_OPERATORS = ();
 
 # Binary operators
 
-foreach my $opr (keys %Perl::Compare::COMPARISONS) {
+foreach my $opr (keys %Perl::Comparison::COMPARISONS) {
   $BINARY_OPERATORS{$opr} = sub {
     my ($self, $y, $x) = @_;
     my $y_val = $self->get_compiled_value($y);

@@ -14,7 +14,7 @@ use Parse::Template::ForLoop;
 use Parse::Template::Directives::FileInfo;
 use Parse::Padding qw(:all);
 use Parse::StringTokenizer;
-use Perl::Compare;
+use Perl::Comparison;
 use Parse::Template::ArgumentStack;
 use Data::Dumper;
 

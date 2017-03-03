@@ -10,7 +10,7 @@ use Error::Programatic;
 use Data::Hub;
 use Data::Hub::FileSystem::Node;
 use Data::Format::Hash qw(hf_format);
-use Data::Compare qw();
+use Data::Comparison qw();
 use Data::OrderedHash;
 use Parse::Template::Standard;
 use Data::Hub::Util qw(:all);
@@ -509,7 +509,7 @@ sub diff {
     my $type = typeof($inst->{target}, $target);
     if ($type eq 'file-data-hash') {
       my $node = $self->{client}->get($fake->{target});
-      my $diff = Data::Compare::diff($target, $node);
+      my $diff = Data::Comparison::diff($target, $node);
       for (my $i = 0; $diff->[$i]; $i++) {
         my ($act, $addr, $rval) = @{$diff->[$i]};
         next if ($act eq '#'); # re-order

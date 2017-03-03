@@ -3,7 +3,7 @@ use strict;
 our $VERSION = 0;
 
 use Perl::Module;
-use Perl::Compare qw(compare);
+use Perl::Comparison qw(compare);
 use Error::Logical;
 use Data::Hub::Subset;
 use Data::Hub::Util qw(:all);
@@ -169,7 +169,7 @@ sub _query_type {
 #
 # If C<val> contains C<}> it must be escaped with a backslash.
 #
-# The operators available for C<opr> are those implemented by L<Perl::Compare>:
+# The operators available for C<opr> are those implemented by L<Perl::Comparison>:
 #
 #   Perl Operators (see L<perlop>)
 #

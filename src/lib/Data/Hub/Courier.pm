@@ -3,7 +3,7 @@ use strict;
 our $VERSION = 0.1;
 
 use Perl::Module;
-use Perl::Compare qw(compare);
+use Perl::Comparison qw(compare);
 use Error::Programatic;
 use Error::Simple;
 use Data::Hub::Subset;

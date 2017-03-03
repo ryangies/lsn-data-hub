@@ -4,7 +4,7 @@ use Perl::Module;
 use Encode;
 use Data::Hub::Util qw(:all);
 use Data::Format::Hash qw(:all);
-use Data::Compare qw();
+use Data::Comparison qw();
 use Data::OrderedHash;
 use base qw(Data::Hub::FileSystem::TextFile);
 use Try::Tiny;
@@ -119,7 +119,7 @@ sub __write_to_disk {
   if ($tied->__private->{txt}) {
     return $tied->SUPER::__write_to_disk;
   }
-  my $diff = Data::Compare::diff($tied->__private->{orig}, $tied->__data);
+  my $diff = Data::Comparison::diff($tied->__private->{orig}, $tied->__data);
 #warn sprintf("DIFF: %s\n%s", $tied->__path, $diff->to_string);
   if (-e $tied->__path) {
     # BEGIN CRITICAL SECTION
@@ -133,7 +133,7 @@ sub __write_to_disk {
     my $data = Data::OrderedHash->new();
     $tied->__parse($c, $data);
     # XXX: Possible unicode mismatch between $data and $diff
-    Data::Compare::merge(curry($data), $diff);
+    Data::Comparison::merge(curry($data), $diff);
     $c = $tied->__format($data);
 ##  chomp $$c; $$c .= "\n"; # ensure nl at eof
     # The $h has the UTF-8 layer (meaning encode on write)

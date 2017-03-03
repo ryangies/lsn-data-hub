@@ -7,7 +7,7 @@ use Data::Hub::Util qw(:all);
 use Parse::Padding qw(padding);
 use base qw(Data::Hub::FileSystem::File);
 use Data::Format::Hash qw(:all);
-use Data::Compare qw();
+use Data::Comparison qw();
 
 sub __read_from_disk {
   my $tied = shift;
@@ -20,7 +20,7 @@ sub __write_to_disk {
   my $txt = $tied->__content || str_ref();
   my $data = $tied->__data;
   if (isa($data, 'HASH') && %$data) {
-    my $diff = Data::Compare::diff($tied->__private->{orig}, $tied->__data);
+    my $diff = Data::Comparison::diff($tied->__private->{orig}, $tied->__data);
     my $disk_text = str_ref();
     # BEGIN CRITICAL SECTION
     my $h = fs_handle($tied->__path, 'w') or die $!; # LOCK
@@ -30,7 +30,7 @@ sub __write_to_disk {
       $$disk_text = <$h>;
       my $data = Data::OrderedHash->new();
       $tied->___divide($disk_text, $data);
-      Data::Compare::merge(curry($data), $diff);
+      Data::Comparison::merge(curry($data), $diff);
     }
     my $file_text = $$txt;
     if (length($file_text) > 0) {

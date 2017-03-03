@@ -81,7 +81,7 @@ _reexport('List::Util', qw(max min));
 # Import/export symbols defined in our distribution
 
 _reexport('Perl::Util', qw(:std));
-_reexport('Perl::Compare', qw(:all));
+_reexport('Perl::Comparison', qw(:all));
 _reexport('Perl::Options', qw(:all));
 _reexport('Perl::Clone', qw(:all));
 

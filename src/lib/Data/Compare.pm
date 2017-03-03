@@ -1,4 +1,4 @@
-package Data::Compare;
+package Data::Comparison;
 use strict;
 our $VERSION = 0.1;
 
@@ -33,7 +33,7 @@ sub diff {
   $left ||= {};
   $right ||= {};
   my $addr = Data::Hub::Address->new();
-  my $result = Data::Compare::Diff->new();
+  my $result = Data::Comparison::Diff->new();
   _diff($addr, $left, $right, $result);
   $result;
 }
@@ -142,7 +142,7 @@ sub _diff {
 
 sub merge {
   my ($dest, $diff) = @_;
-  throw Error::Programatic unless isa($diff, 'Data::Compare::Diff');
+  throw Error::Programatic unless isa($diff, 'Data::Comparison::Diff');
   my %array_offsets = ();
   for (@$diff) {
     my ($opr, $addr, $val) = @$_;
@@ -182,7 +182,7 @@ sub merge {
 
 1;
 
-package Data::Compare::Diff;
+package Data::Comparison::Diff;
 use Perl::Module;
 
 sub new {
