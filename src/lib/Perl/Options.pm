@@ -40,7 +40,7 @@ sub _parse_option (\$) {
 ## ------------------------------------------------------------------------------
 
 sub my_opts {
-  my ($args, $defaults) = @_;
+  my ($args, $defaults, $expand) = @_;
   my $opts = $defaults || {};
   for (my $i = 0; $i < @$args; $i++) {
     next unless defined $$args[$i];
@@ -76,7 +76,16 @@ sub my_opts {
           $eat = 2;
         }
       }
-      $opts->{$k} = $v;
+      if (exists $$opts{$k} && $expand) {
+        my $cv = $$opts{$k};
+        if (isa($cv, 'ARRAY')) {
+          push @$cv, $v;
+        } else {
+          $opts->{$k} = [$cv, $v];
+        }
+      } else {
+        $opts->{$k} = $v;
+      }
     }
     if ($eat) {
       splice @$args, $i, $eat;
