@@ -1,5 +1,6 @@
 #!/usr/bin/perl -w
 use strict;
+use Perl::Util qw(:all);
 use Data::Hub qw($Hub);
 use Data::Hub::Util qw(path_name);
 binmode STDOUT, ':utf8';
@@ -82,6 +83,12 @@ if ($DEBUG) {
 } elsif ($PROMPT) {
   require Parse::Template::Debug::Prompt;
   Parse::Template::Debug::Prompt::attach($p);
+}
+if (my $mounts = _take_opt('mount')) {
+  foreach my $mount_spec (isa($mounts, 'ARRAY') ? @$mounts : ($mounts)) {
+    my ($mount_point, $abs_path) = split /\s*=\s*/, $mount_spec;
+    $Hub->mount($mount_point, $abs_path);
+  }
 }
 if (my $use = _take_opt('use')) {
   $p->use($$Hub{$_}) for split /\s*[,]\s*/, $use;

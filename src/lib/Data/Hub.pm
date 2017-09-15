@@ -106,7 +106,7 @@ sub parse_env {
   my $opts = {};
   my $env = new Data::OrderedHash();
   %$env = map {($_, $ENV{$_})} sort keys %ENV;
-  my_opts(\@argv, $opts);
+  my_opts(\@argv, $opts, 1);
   $$self{'/sys/ENV'} = $env;
   $$self{'/sys/OPTS'} = $opts;
   $$self{'/sys/ARGV'} = [@argv];
