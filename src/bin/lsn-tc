@@ -19,6 +19,7 @@ options:
   -b|-begin   Begin sequence, default: [#
   -e|-end     End sequence, default: ]
   -t|-type    Parser type (Parse::Template::___) default is 'Standard'
+  -m|-mount   Mount a folder to the root context, i.e., /name=/abs/path/to/dir
   -use        Address to data which is placed in the context
   ...         Other options are placed in the context (used)
 notes:
