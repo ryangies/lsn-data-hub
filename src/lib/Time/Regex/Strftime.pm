@@ -60,6 +60,7 @@ sub init {
     H => $$self{num}{'00_23'},
     I => $$self{num}{'01_12'},
     j => $$self{num}{'001_366'},
+    J => $$self{num}{'000_999'},
     k => $$self{num}{'0_23'},
     l => $$self{num}{'1_12'},
     m => $$self{num}{'01_12'},
