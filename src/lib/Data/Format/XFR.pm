@@ -106,7 +106,7 @@ sub parse {
   my $self = shift;
   my $str = shift;
   throw Error::Logical '$str must begin with "%{", "@{", or "${"'
-    unless $str =~ /^([\%\$\@]){/;
+    unless $str =~ /^([\%\$\@])\{/;
   my %new = (%New, @_);
   if ($1 eq '$') {
     my $value = substr $str, 2, -3;

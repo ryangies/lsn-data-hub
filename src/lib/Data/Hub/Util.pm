@@ -216,7 +216,7 @@ our $Path_Tokenizer = Parse::StringTokenizer->new(
 );
 
 our $Addr_Tokenizer = Parse::StringTokenizer->new(
-  -contained  => q({}),
+  -contained  => q(\{\}),
   -quotes     => q('"),
   -delim      => q(/),
 );

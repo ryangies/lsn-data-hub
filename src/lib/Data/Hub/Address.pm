@@ -7,7 +7,7 @@ use Error::Programatic;
 use Parse::StringTokenizer;
 
 our $Addr_Tokenizer = Parse::StringTokenizer->new(
-  -contained  => q({}),
+  -contained  => q(\{\}),
   -quotes     => q('"),
   -delim      => q(/),
 );
