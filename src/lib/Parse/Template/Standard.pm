@@ -9,6 +9,7 @@ use Math::Symbolic;
 use Error::Logical;
 use Algorithm::KeyGen qw($KeyGen);
 use Data::Format::JavaScript qw(js_format js_format_string);
+use Data::Format::Xml qw(xml_format);
 use Parse::Template::Content;
 use Parse::Template::ForLoop;
 use Parse::Template::Directives::FileInfo;
@@ -116,6 +117,19 @@ $Directives{'json'}{'string'}[0] = sub {
   $self->get_ctx->{'collapse'} = 0;
   js_format_string($text);
 };
+
+# XML formatting
+
+$Directives{'xml'} = {};
+$Directives{'xml'}{'*'}[0] =
+$Directives{'xml'}{'var'}[0] = sub {
+  my $self = shift;
+  my $opts = my_opts(\@_);
+  my $value = $self->_get_data_value(@_, -opts => $opts);
+  $self->get_ctx->{'collapse'} = 0;
+  xml_format($value, -opts => $opts);
+};
+
 
 sub _get_data_value {
   my $self = shift;
