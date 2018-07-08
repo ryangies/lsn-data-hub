@@ -29,16 +29,22 @@ our %EXPORT_TAGS = (all => [@EXPORT_OK],);
 # ------------------------------------------------------------------------------
 
 sub diff {
+  my $opts = my_opts(\@_, {
+    ignore_key_order => 0
+  });
   my ($left, $right) = @_;
   $left ||= {};
   $right ||= {};
   my $addr = Data::Hub::Address->new();
   my $result = Data::Comparison::Diff->new();
-  _diff($addr, $left, $right, $result);
+  _diff($addr, $left, $right, $result, -opts => $opts);
   $result;
 }
 
 sub _diff {
+  my $opts = my_opts(\@_, {
+    ignore_key_order => 0
+  });
   my ($addr, $left, $right, $result) = @_;
   if (!defined($left) && !defined($right)) {
   } elsif (!defined($left) && defined($right)) {
@@ -61,7 +67,7 @@ sub _diff {
           if ($k1 eq $k2) {
             my $k = $k1;
             $addr->push($k);
-            _diff($addr, $left->{$k}, $right->{$k}, $result);
+            _diff($addr, $left->{$k}, $right->{$k}, $result, -opts => $opts);
             $addr->pop();
           } else {
             $has_changed_order ||= 1;
@@ -70,7 +76,7 @@ sub _diff {
             if (defined($k_idx)) {
               splice @keys2, $k_idx, 1;
               $addr->push($k1);
-              _diff($addr, $left->{$k1}, $right->{$k1}, $result);
+              _diff($addr, $left->{$k1}, $right->{$k1}, $result, -opts => $opts);
               $addr->pop();
             } else {
               push @$result, ['-', $addr->to_string($k1)];
@@ -79,7 +85,7 @@ sub _diff {
             if (defined($k_idx)) {
               splice @keys1, $k_idx, 1;
               $addr->push($k2);
-              _diff($addr, $left->{$k2}, $right->{$k2}, $result);
+              _diff($addr, $left->{$k2}, $right->{$k2}, $result, -opts => $opts);
               $addr->pop();
             } else {
               push @$result, ['+', $addr->to_string($k2), $right->{$k2}];
@@ -92,14 +98,14 @@ sub _diff {
         }
         $idx++;
       }
-      if ($has_changed_order) {
+      if ($has_changed_order && !$$opts{'ignore_key_order'}) {
         push @$result, ['#', $addr->to_string(), \@key_order];
       }
     } elsif (isa($left, 'ARRAY')) {
       my $len = @$left > @$right ? @$left : @$right;
       for (my $i = 0; $i < $len; $i++) {
         $addr->push($i);
-        _diff($addr, $left->[$i], $right->[$i], $result);
+        _diff($addr, $left->[$i], $right->[$i], $result, -opts => $opts);
         $addr->pop();
       }
     } elsif (isa($left, 'SCALAR')) {
@@ -110,7 +116,7 @@ sub _diff {
       if ($$left eq $left || $$right eq $right) {
         warn "Self reference cannot be dereferenced";
       } else {
-        _diff($addr, $$left, $$right, $result);
+        _diff($addr, $$left, $$right, $result, -opts => $opts);
       }
     } else {
       if ($left ne $right) {
@@ -187,7 +193,8 @@ use Perl::Module;
 
 sub new {
   my $classname = ref($_[0]) ? ref(shift) : shift;
-  bless [], $classname;
+  my $deserialize = shift || [];
+  bless [@$deserialize], $classname;
 }
 
 sub to_string {

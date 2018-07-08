@@ -85,7 +85,7 @@ sub _get_recursive {
   my $struct = shift;
   my $root = shift;
   $root = '' unless defined $root;
-  $root and $root .= '/';
+  $root .= '/' if defined $root && $root ne '';
   my $subset = Data::Hub::ExpandedSubset->new();
   iterate($struct, sub {
     my ($k, $v) = (shift, shift);
