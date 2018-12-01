@@ -37,7 +37,7 @@ sub c_sprintf ($@) {
 
 sub c_stripf ($@) {
   my $str = shift;
-  $str =~ s/(?<!%)%_([$ColorChars])([ \+\-0#]?[\*\$\w\{\}\.\d]+)/%$2/g;
+  $str =~ s/(?<!%)%_([$ColorChars])([ \+\-0#]?[\*\$\w\{\}\.\d]+)/\%$2/g;
   sprintf $str, @_;
 }
 

@@ -216,7 +216,6 @@ sub use {
       $ns->[1] = $tk;
     }
     next unless isa($ns->[0], 'HASH');
-    next if $ns->[0]->length() < 1;
     push @items, $ns;
   }
   my $sz = @items;
