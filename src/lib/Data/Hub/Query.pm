@@ -75,6 +75,7 @@ sub _query_expansion {
   _query($_[0], '?(=~):' . '^' . $_[1] . '$');
 }
 
+# {:count}
 # {:first}
 # {:last}
 # {:reverse}
@@ -84,7 +85,7 @@ sub _query_expansion {
 # {:rsort $key}
 sub _query_manip {
   my ($struct, $crit) = @_;
-  my @expr = $crit =~ /^(reverse|sort|rsort|first|last)(?:\s+([^\s]+))?$/;
+  my @expr = $crit =~ /^(count|reverse|sort|rsort|first|last)(?:\s+([^\s]+))?$/;
   my $opr = shift @expr;
   my $ordered = Data::Hub::Subset->new();
   $struct = curry($struct);
@@ -100,6 +101,8 @@ sub _query_manip {
     } else {
       $ordered->{$_} = Data::Hub::Courier::_get_value($struct, $_) for sort $struct->keys;
     }
+  } elsif ($opr eq 'count') {
+    return $struct->length();
   } elsif ($opr eq 'first') {
     my @values = $struct->values();
     return shift @values;

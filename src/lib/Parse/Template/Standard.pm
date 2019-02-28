@@ -38,6 +38,8 @@ our %Directives = (
   'dump'    => [\&_eval_dump],
   'finfo'   => Parse::Template::Directives::FileInfo->new(),
   'math'    => [\&_eval_math],
+  'max'     => [\&_eval_max],
+  'min'     => [\&_eval_min],
   # Strings
   'trim'    => [\&_eval_trim],
   'replace' => [\&_eval_replace],
@@ -741,11 +743,37 @@ sub _eval_math {
   foreach my $k (keys %$vars) {
     $vars->{$k} = $self->get_compiled_value(\$vars->{$k});
     $vars->{$k} =~ s/^([0-9]+)[a-z]+$/$1/; # strip units (like 'px', 'em', etc.)
+    $vars->{$k} = 0 + $vars->{$k};
   }
   my $tree = Math::Symbolic->parse_from_string($expr);
   my ($sub) = Math::Symbolic::Compiler->compile_to_sub($tree, [keys %$vars]);
   $self->get_ctx->{'collapse'} = 0;
-  $sub->(values %$vars);
+  my $result = $sub->(values %$vars);
+  $result;
+}
+
+sub _eval_max {
+  my $self = shift;
+  my $name = shift;
+  my $args = [];
+  foreach my $v (@_) {
+    $v =~ s/^([0-9]+)[a-z]+$/$1/; # strip units (like 'px', 'em', etc.)
+    push @$args, $self->get_compiled_value(\$v);
+  }
+  $self->get_ctx->{'collapse'} = 0;
+  max(@$args);
+}
+
+sub _eval_min {
+  my $self = shift;
+  my $name = shift;
+  my $args = [];
+  foreach my $v (@_) {
+    $v =~ s/^([0-9]+)[a-z]+$/$1/; # strip units (like 'px', 'em', etc.)
+    push @$args, $self->get_compiled_value(\$v);
+  }
+  $self->get_ctx->{'collapse'} = 0;
+  min(@$args);
 }
 
 # [#:trim 'abc def ghi' -chars=5]
