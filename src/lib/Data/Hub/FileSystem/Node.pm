@@ -102,6 +102,10 @@ Add_Handler(q/Data::Hub::FileSystem::JSONFile/,    '-type=T', '-path=\.json$');
 Add_Handler(q/Data::Hub::FileSystem::YAMLFile/,    '-type=!', '-path=\.ya?ml$');
 Add_Handler(q/Data::Hub::FileSystem::YAMLFile/,    '-type=T', '-path=\.ya?ml$');
 
+# CSV
+Add_Handler(q/Data::Hub::FileSystem::CSV/,         '-type=T', '-path=\.csv$');
+Add_Handler(q/Data::Hub::FileSystem::CSV/,         '-type=B', '-path=\.tsv$');
+
 # Images
 Add_Handler(q/Data::Hub::FileSystem::ImageFile/,    '-type=B', '-path=\.(jpe?g|gif|png)');
 
