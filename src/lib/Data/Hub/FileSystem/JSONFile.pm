@@ -16,7 +16,7 @@ sub __parse {
 sub __format {
   my $tied = shift;
   my $data = shift;
-  my $json = JSON::XS->new->ascii->pretty;
+  my $json = JSON::XS->new->ascii->pretty->canonical(1);
   my $str = $json->encode(clone($data, -pure_perl));
   return \$str;
 }
