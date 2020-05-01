@@ -5,6 +5,7 @@ our $VERSION = 0.1;
 use Exporter qw(import);
 use Perl::Module;
 use Data::Hub::Util qw(fs_handle);
+use Data::Hub::Container qw(curry);
 
 our @EXPORT = qw();
 our @EXPORT_OK = qw(
@@ -12,11 +13,21 @@ our @EXPORT_OK = qw(
 );
 our %EXPORT_TAGS = (all => [@EXPORT_OK],);
 
+# ------------------------------------------------------------------------------
+# CSV Parsing Conventions
+#
+#   Byte-order mark is 65279, and will be stripped
+#   Headers are in the first row
+#   Embedded delimters, field need to be enclosed in quotes
+#   Embedded quotes, need to be doubled up
+#
+# ------------------------------------------------------------------------------
+
 sub csv_parse {
   my $rows = [];
   my $parser = __PACKAGE__->new(@_, rows => $rows);
   while ($parser->has_next) {
-    push @$rows, $parser->next;
+    push @$rows, curry($parser->next);
   }
   return $parser;
 }
@@ -26,6 +37,13 @@ sub csv_parse {
 #
 # Data::Format::CSV->new(path => 'export.csv');
 # Data::Format::CSV->new(path => 'export.tsv', delimiter => "\t");
+#
+# When the first line of the CSV indicates the delimiter, such as
+# 
+#   SEP=,
+#
+# We will update accordingly, regardless of what was specified in the constructor.
+# See also: https://superuser.com/questions/773644/what-is-the-sep-metadata-you-can-add-to-csvs
 # ------------------------------------------------------------------------------
 
 sub new () {
@@ -42,6 +60,8 @@ sub new () {
     $$self{'fh'} = fs_handle($$self{'path'}, 'r') or croak "$!: $$self{'path'}";
     binmode $$self{'fh'}, $$self{'binmode'};
     $self->parse_header();
+  } else {
+    warnf ("Path does not exist: %s", $$self{'path'}) if $$self{'path'};
   }
   return $self;
 }
@@ -52,7 +72,18 @@ sub new () {
 
 sub parse_header() {
   my $self = shift;
-  $$self{'columns'} = $self->_next;
+  my @chars = split //, $$self{'fh'}->getline;
+  shift @chars if ord($chars[0]) == 65279; # BOM
+  my $line = join '', @chars;
+  if ($line =~ /^(?:sep|SEP)=(.)/) {
+    $$self{'delimiter'}=$1;
+    $line = $$self{'fh'}->getline;
+  }
+  $line =~ s/[\r\n]+$//;
+  my $columns = $self->_split($line);
+  #TODO:provide normalize_column_name callback if such is needed
+  #$columns = [map {s/\s/_/g;$_} @$columns];
+  $$self{'columns'} = $columns;
 }
 
 # ------------------------------------------------------------------------------
@@ -61,7 +92,7 @@ sub parse_header() {
 
 sub has_next() {
   my $self = shift;
-  return !$$self{'fh'}->opened || !$$self{'fh'}->eof;
+  return $$self{'fh'} ? !$$self{'fh'}->opened || !$$self{'fh'}->eof : 0;
 }
 
 # ------------------------------------------------------------------------------
@@ -99,17 +130,24 @@ sub _split() {
   my @field = ();
   my $accumulating = 0;
   foreach my $fragment (split $$self{'delimiter'}, $_[0]) {
-    if ($fragment =~ s/^\"//) {
+    if ($accumulating && $fragment =~ s/^"$//) {
+      $accumulating = 0;
+    }
+    if ($fragment =~ s/^"(?!")//) {
       $accumulating = 1;
     }
-    if ($fragment =~ s/\"$//) {
+    if ($fragment =~ s/(?<!")"{1}$//) {
       $accumulating = 0;
+    }
+    if (!$accumulating && $fragment =~ s/^""$//) {
+      $fragment = '';
     }
     push @field, $fragment;
     if (!$accumulating) {
       my $value = join($$self{'delimiter'}, @field);
       $value =~ s/^\s+//;
       $value =~ s/\s+$//;
+      $value =~ s/""/"/g;
       $value = undef if defined $value && $value eq 'NULL';
       push @$result, $value;
       @field = ();
