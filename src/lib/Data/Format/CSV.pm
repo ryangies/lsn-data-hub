@@ -116,6 +116,7 @@ sub next() {
 sub _next () {
   my $self = shift;
   my $line = $$self{'fh'}->getline;
+  $$self{'fh'}->eof and delete $$self{'fh'};
   $line =~ s/[\r\n]+$//;
   return $self->_split($line);
 }

@@ -5,6 +5,7 @@ use Perl::Module;
 use Data::Hub qw($Hub);
 use App::Console::Prompts qw(:all);
 use Data::Hub::Courier;
+use Data::Hub::Util qw(FS);
 use HTML::Entities ();
 use Data::Format::Hash qw(:all);
 use Data::Format::JavaScript qw(:all);
@@ -32,6 +33,9 @@ sub convert {
   my $source = $Hub->get($source_name);
   my $dest = $Hub->get($dest_name);
   die "Does not exist: $source_name" unless $source;
+  if (isa($source, FS('CSV'))) {
+    $source = {rows => $$source{'rows'}};
+  }
   exit 0 if $dest && !prompt_yN(sprintf('Overwrite %s', $dest->get_path));
   $Hub->set($dest_name, clone($source, -pure_perl))->save();
 };

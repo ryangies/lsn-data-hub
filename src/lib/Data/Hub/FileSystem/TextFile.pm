@@ -86,10 +86,25 @@ sub ___divide {
       my $trim = length('__DATA__') + $padding[1];
       $data_str = substr $data_str, $trim;
       chomp $data_str;
-      hf_parse(\$data_str, -into => $data, -hint => $tied->__path);
+      $tied->___deserialize_data(\$data_str, $data);
     }
   }
   $data;
+}
+
+sub ___deserialize_data {
+  my $tied = shift or return;
+  my $serialized_ref = shift or return;
+  my $data_ref = shift or return;
+  my ($format) = $$serialized_ref =~ /^#!\s*(csv|hf|json|yaml)/;
+  if ($format) {
+    warn "Deserialize from $format\n";
+  }
+  hf_parse($serialized_ref, -into => $data_ref, -hint => $tied->__path);
+  $data_ref;
+}
+
+sub __serialize_data {
 }
 
 1;
